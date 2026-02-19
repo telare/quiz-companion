@@ -1,10 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { GoogleGenAI } from '@google/genai';
+import { Inject, Injectable } from "@nestjs/common";
+import { GoogleGenAI } from "@google/genai";
 
 @Injectable()
 export class AiService {
   constructor(
-    @Inject('AI_CLIENT')
+    @Inject("AI_CLIENT")
     private readonly googleGenAI: GoogleGenAI,
   ) {}
   async getRandomQuestion() {
@@ -23,24 +23,24 @@ export class AiService {
 
     try {
       const resp = await this.googleGenAI.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
-          responseMimeType: 'application/json',
+          responseMimeType: "application/json",
         },
       });
       if (!resp.text) {
-        throw new Error('Failed to get text from the AI');
+        throw new Error("Failed to get text from the AI");
       }
       const questionData = JSON.parse(resp.text);
       console.log(questionData);
       if (!questionData) {
-        throw new Error('Error in response of the AI');
+        throw new Error("Error in response of the AI");
       }
       return questionData;
     } catch (error) {
-      console.error('Error in ai generation: ', error.message);
-      throw new Error('Failed to generate grammar question.');
+      console.error("Error in ai generation: ", error.message);
+      throw new Error("Failed to generate grammar question.");
     }
   }
 }

@@ -1,13 +1,13 @@
 // @ts-check
-import myConfig from '@tl21/eslint-custom';
-import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import myConfig from "@tl21/eslint-custom";
+import eslint from "@eslint/js";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: ["eslint.config.mjs"],
   },
   ...myConfig,
   eslint.configs.recommended,
@@ -20,7 +20,7 @@ export default [
         ...globals.jest,
       },
       ecmaVersion: "latest",
-      sourceType: 'module',
+      sourceType: "module",
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
