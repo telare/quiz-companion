@@ -1,11 +1,14 @@
 import { Module } from "@nestjs/common";
 import { TelegrafModule } from "nestjs-telegraf";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { BotUpdate } from "./bot.update";
 import { AiModule } from "src/ai/ai.module";
 import { UsersModule } from "src/users/user.module";
 import { QuestionModule } from "src/question/question.module";
 import { ENV_KEYS } from "src/utils/keys";
+import { StartCommand } from "./commands/start.update";
+import { HelpCommand } from "./commands/help.update";
+import { QuizCommand } from "./commands/quiz.update";
+import { UserCommand } from "./commands/user.update";
 
 @Module({
   imports: [
@@ -24,6 +27,6 @@ import { ENV_KEYS } from "src/utils/keys";
     }),
     AiModule,
   ],
-  providers: [BotUpdate],
+  providers: [StartCommand, HelpCommand, QuizCommand, UserCommand],
 })
 export class BotModule {}
