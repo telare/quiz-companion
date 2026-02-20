@@ -1,13 +1,16 @@
-import { Update, Start, Ctx, Help, Command } from "nestjs-telegraf";
+import { Update, Start, Ctx, Help, Command, Action } from "nestjs-telegraf";
 import { Context, Markup } from "telegraf";
 import { AiService } from "src/ai/ai.service";
 import { UserService } from "src/users/user.service";
+import { QuestionService } from "src/question/question.service";
+import { QuestionDocument } from "src/schemas/question.schema";
 
 @Update()
 export class BotUpdate {
   constructor(
     private readonly aiService: AiService,
     private readonly userService: UserService,
+    private readonly questionService: QuestionService,
   ) {}
 
   @Start()
@@ -62,16 +65,48 @@ export class BotUpdate {
   @Command("random")
   async randomCommand(@Ctx() ctx: Context) {
     const questionData = await this.aiService.getRandomQuestion();
+    if (!questionData) {
+      return await ctx.reply(
+        "Sorry unexpected error, please, try again later.",
+      );
+    }
+
     const question = questionData.question;
-    const keyboard = Markup.inlineKeyboard(
-      questionData.answers.map((ans) =>
-        Markup.button.callback(ans, `answear_${ans}`),
-      ),
-      {
-        columns: 1,
-      },
-    );
-    await ctx.reply(question, keyboard);
+    try {
+      const savedQuestion = await this.questionService.create({
+        correctAnswer: questionData.correctOption,
+        options: questionData.options,
+        text: question,
+      });
+      const questionId = savedQuestion._id.toString();
+      const keyboard = Markup.inlineKeyboard(
+        questionData.options.map((answerText, index) => {
+          const callbackData = `quiz:${questionId}:${index}`;
+
+          return Markup.button.callback(answerText, callbackData);
+        }),
+        { columns: 1 },
+      );
+      await ctx.reply(question, keyboard);
+    } catch (error) {
+      await ctx.reply("Sorry saving error occurs, please, try again later.");
+    }
+  }
+
+  @Action(/^quiz:/)
+  async handleRandomQuestionAnswer(@Ctx() ctx: Context) {
+    const cbQuery = ctx.callbackQuery;
+
+    if (!cbQuery || !("data" in cbQuery)) {
+      return;
+    }
+    const [, id, choice] = cbQuery.data.split(":");
+    const result = await this.questionService.checkQuestion(id, choice);
+    const feedback = result.isCorrect
+      ? `✅ Correct!.`
+      : `❌ Error. The correct answer is: ${result.correctAnswer}`;
+
+    await ctx.reply(feedback);
   }
 }
 

@@ -10,5 +10,6 @@ import { Question, QuestionSchema } from "src/schemas/question.schema";
     ]),
   ],
   providers: [QuestionService],
+  exports:[QuestionService]
 })
 export class QuestionModule {}

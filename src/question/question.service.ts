@@ -24,5 +24,22 @@ export class QuestionService {
   async create(question: Question) {
     const newQuestion = new this.questionModel(question);
     await newQuestion.save();
+    return newQuestion;
+  }
+
+  async checkQuestion(questionId: string, userOption: string) {
+    const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
+    const correctOpt = qinDb?.correctAnswer;
+
+    if (userOption !== correctOpt) {
+      return {
+        isCorrect: false,
+        correctAnswer: correctOpt,
+      };
+    }
+
+    return {
+      isCorrect: true,
+    };
   }
 }

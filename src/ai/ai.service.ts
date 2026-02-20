@@ -1,13 +1,19 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { GoogleGenAI } from "@google/genai";
 
+export interface GeneratedQuestion  {
+        question:string, 
+        options: string[],
+        correctOption: string
+      }
+
 @Injectable()
 export class AiService {
   constructor(
     @Inject("AI_CLIENT")
     private readonly googleGenAI: GoogleGenAI,
   ) {}
-  async getRandomQuestion() {
+  async getRandomQuestion():Promise<GeneratedQuestion| undefined>  {
     const prompt = `
       You are an expert in English grammar.
       Generate one multiple-choice grammar question suitable for an intermediate learner.
@@ -16,8 +22,8 @@ export class AiService {
       Return the output *only* as a valid JSON object with the following structure:
       {
         "question": "The full question text",
-        "answers": ["answer text 1", "answer text 2", "answer text 3"],
-        "correctAnswer": "the text of the correct answer"
+        "options": ["answer text 1", "answer text 2", "answer text 3"],
+        "correctOption": "the text of the correct answer"
       }
     `;
 
@@ -32,7 +38,7 @@ export class AiService {
       if (!resp.text) {
         throw new Error("Failed to get text from the AI");
       }
-      const questionData = JSON.parse(resp.text);
+      const questionData: GeneratedQuestion = JSON.parse(resp.text);
       console.log(questionData);
       if (!questionData) {
         throw new Error("Error in response of the AI");
