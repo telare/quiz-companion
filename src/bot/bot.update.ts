@@ -1,4 +1,12 @@
-import { Update, Start, Ctx, Help, Command, Action } from "nestjs-telegraf";
+import {
+  Update,
+  Start,
+  Ctx,
+  Help,
+  Command,
+  Action,
+  TelegrafException,
+} from "nestjs-telegraf";
 import { Context, Markup } from "telegraf";
 import { AiService } from "src/ai/ai.service";
 import { UserService } from "src/users/user.service";
@@ -88,7 +96,10 @@ export class BotUpdate {
       );
       await ctx.reply(question, keyboard);
     } catch (error) {
-      await ctx.reply("Sorry saving error occurs, please, try again later.");
+      if (error instanceof TelegrafException) {
+        console.log(error.message);
+        await ctx.reply("Sorry saving error occurs, please, try again later.");
+      }
     }
   }
 
@@ -117,31 +128,10 @@ export class BotUpdate {
 
       await ctx.reply(feedback);
     } catch (error) {
-      await ctx.reply("Sorry saving error occurs, please, try again later.");
+      if (error instanceof TelegrafException) {
+        console.log(error.message);
+        await ctx.reply("Sorry saving error occurs, please, try again later.");
+      }
     }
   }
 }
-
-// @Command('quiz')
-// async quizCommand(@Ctx() ctx: Context) {
-//   const question = 'Which framework is this bot built with?';
-//   const keyboard = Markup.inlineKeyboard(
-//     [
-//       Markup.button.callback('NestJS', 'answer_nestjs'),
-//       Markup.button.callback('Express', 'answer_express'),
-//       Markup.button.callback('Fastify', 'answer_fastify'),
-//     ],
-//     { columns: 1 },
-//   );
-//   await ctx.reply(question, keyboard);
-// }
-
-// @Action('answer_nestjs')
-// async handleCorrectAnswer(@Ctx() ctx: Context) {
-//   // Acknowledge the button press (this shows a small toast notification)
-//   await ctx.answerCbQuery('Correct! 🎉');
-
-//   // Send a new message with the result.
-//   // The original message with buttons will stay in the chat and remain clickable.
-//   await ctx.reply('You chose NestJS. That is correct!');
-// }

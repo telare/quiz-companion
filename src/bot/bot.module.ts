@@ -5,6 +5,7 @@ import { BotUpdate } from "./bot.update";
 import { AiModule } from "src/ai/ai.module";
 import { UsersModule } from "src/users/user.module";
 import { QuestionModule } from "src/question/question.module";
+import { ENV_KEYS } from "src/utils/keys";
 
 @Module({
   imports: [
@@ -12,9 +13,13 @@ import { QuestionModule } from "src/question/question.module";
     QuestionModule,
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        token: configService.get<string>("TELEGRAM_BOT_TOKEN") || "",
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>(ENV_KEYS.tgBot);
+        if (!secret) {
+          throw new Error("Error in credentials");
+        }
+        return { token: secret };
+      },
       inject: [ConfigService],
     }),
     AiModule,

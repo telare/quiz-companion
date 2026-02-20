@@ -1,20 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { GoogleGenAI } from "@google/genai";
+import { TelegrafException } from "nestjs-telegraf";
 
-export interface GeneratedQuestion  {
-        question:string, 
-        options: string[],
-        correctOption: string
-      }
+export interface GeneratedQuestion {
+  question: string;
+  options: string[];
+  correctOption: string;
+}
 
-@Injectable()
-export class AiService {
-  constructor(
-    @Inject("AI_CLIENT")
-    private readonly googleGenAI: GoogleGenAI,
-  ) {}
-  async getRandomQuestion():Promise<GeneratedQuestion| undefined>  {
-    const prompt = `
+const RANDOM_GRAMMAR_PROMPT = `
       You are an expert in English grammar.
       Generate one multiple-choice grammar question suitable for an intermediate learner.
       The question must have 3 possible answers, with only one being correct.
@@ -26,27 +20,45 @@ export class AiService {
         "correctOption": "the text of the correct answer"
       }
     `;
+const AI_MODEL = "gemini-2.5-flash";
+const RESPONSE_TYPE = "application/json";
+@Injectable()
+export class AiService {
+  constructor(
+    @Inject("AI_CLIENT")
+    private readonly googleGenAI: GoogleGenAI,
+  ) {}
+  async getRandomQuestion(): Promise<GeneratedQuestion | undefined> {
+    const prompt = RANDOM_GRAMMAR_PROMPT;
 
     try {
       const resp = await this.googleGenAI.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: AI_MODEL,
         contents: prompt,
         config: {
-          responseMimeType: "application/json",
+          responseMimeType: RESPONSE_TYPE,
         },
       });
       if (!resp.text) {
         throw new Error("Failed to get text from the AI");
       }
-      const questionData: GeneratedQuestion = JSON.parse(resp.text);
+
+      //fix
+      const questionData: GeneratedQuestion = JSON.parse(
+        resp.text,
+      ) as GeneratedQuestion;
+
       console.log(questionData);
       if (!questionData) {
         throw new Error("Error in response of the AI");
       }
       return questionData;
-    } catch (error) {
-      console.error("Error in ai generation: ", error.message);
-      throw new Error("Failed to generate grammar question.");
+    } catch (error: unknown) {
+      if (error instanceof TelegrafException) {
+        console.error(error.message);
+        throw new Error("Failed to generate grammar question.");
+      }
+      throw new Error("An unexpected error occurs.");
     }
   }
 }
