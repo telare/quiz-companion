@@ -3,7 +3,6 @@ import { Context, Markup } from "telegraf";
 import { AiService } from "src/ai/ai.service";
 import { UserService } from "src/users/user.service";
 import { QuestionService } from "src/question/question.service";
-import { QuestionDocument } from "src/schemas/question.schema";
 
 @Update()
 export class BotUpdate {
@@ -95,18 +94,31 @@ export class BotUpdate {
 
   @Action(/^quiz:/)
   async handleRandomQuestionAnswer(@Ctx() ctx: Context) {
+    await ctx.answerCbQuery();
+    await ctx.reply("Your answer received, please wait for a little bit... ⏳");
+    const disabledKeyboard = Markup.inlineKeyboard([]);
+
+    await ctx.editMessageReplyMarkup(disabledKeyboard.reply_markup);
     const cbQuery = ctx.callbackQuery;
 
     if (!cbQuery || !("data" in cbQuery)) {
       return;
     }
     const [, id, choice] = cbQuery.data.split(":");
-    const result = await this.questionService.checkQuestion(id, choice);
-    const feedback = result.isCorrect
-      ? `✅ Correct!.`
-      : `❌ Error. The correct answer is: ${result.correctAnswer}`;
+    try {
+      const result = await this.questionService.checkQuestion(
+        id,
+        parseInt(choice),
+      );
 
-    await ctx.reply(feedback);
+      const feedback = result.isCorrect
+        ? `✅ Correct!`
+        : `❌ Error. The correct answer is: ${result.correctAnswer}`;
+
+      await ctx.reply(feedback);
+    } catch (error) {
+      await ctx.reply("Sorry saving error occurs, please, try again later.");
+    }
   }
 }
 

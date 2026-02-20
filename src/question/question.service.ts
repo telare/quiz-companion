@@ -27,14 +27,20 @@ export class QuestionService {
     return newQuestion;
   }
 
-  async checkQuestion(questionId: string, userOption: string) {
+  async checkQuestion(questionId: string, userOptionIndex: number) {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
-    const correctOpt = qinDb?.correctAnswer;
+    if (!qinDb) {
+      throw new Error(
+        "Question has not founded in the DB. Please try again later",
+      );
+    }
+    const correctAnswer = qinDb.correctAnswer;
+    const correctOptIndex = qinDb.options.findIndex((v) => v === correctAnswer);
 
-    if (userOption !== correctOpt) {
+    if (userOptionIndex !== correctOptIndex) {
       return {
         isCorrect: false,
-        correctAnswer: correctOpt,
+        correctAnswer,
       };
     }
 
