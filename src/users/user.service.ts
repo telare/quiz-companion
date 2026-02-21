@@ -25,4 +25,18 @@ export class UserService {
     const newUser = new this.userModel(user);
     await newUser.save();
   }
+
+  async incrementPoints(userName: string, amount: number) {
+    await this.userModel.updateOne(
+      { username: userName },
+      { $inc: { totalPoints: amount } },
+    );
+  }
+
+  async decrementPoints(userName: string, amount: number) {
+    await this.userModel.updateOne(
+      { username: userName, totalPoints: { $gt: 0 } },
+      { $inc: { totalPoints: -amount } },
+    );
+  }
 }

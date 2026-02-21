@@ -9,15 +9,15 @@ export class QuestionService {
     @InjectModel(Question.name) private readonly questionModel: Model<Question>,
   ) {}
 
-  async findAll(): Promise<Question[]> {
+  async findAll(): Promise<HydratedDocument<Question>[]> {
     return this.questionModel.find().exec();
   }
 
-  async findOne(id: string): Promise<Question | null> {
+  async findOne(id: string): Promise<HydratedDocument<Question> | null> {
     return this.questionModel.findById(id).exec();
   }
 
-  async findByText(text: string): Promise<Question | null> {
+  async findByText(text: string): Promise<HydratedDocument<Question> | null> {
     return this.questionModel.findOne({ text });
   }
 
@@ -40,8 +40,9 @@ export class QuestionService {
   ): Promise<{ isCorrect: boolean; correctAnswer?: string }> {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
     if (!qinDb) {
+      console.error("[QuestionService] Error finding question");
       throw new Error(
-        "Question has not founded in the DB. Please try again later",
+        "Question has not been founded in the database. Please try again later.",
       );
     }
     const correctAnswer = qinDb.correctAnswer;
@@ -57,5 +58,9 @@ export class QuestionService {
     return {
       isCorrect: true,
     };
+  }
+
+  async findRandom(): Promise<HydratedDocument<Question> | null> {
+    return await this.questionModel.findOne();
   }
 }

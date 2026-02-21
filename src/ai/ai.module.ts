@@ -3,7 +3,7 @@ import { AiService } from "./ai.service";
 import { HttpModule } from "@nestjs/axios";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
-import { ENV_KEYS } from "src/utils/keys";
+import { getEnvValue } from "src/utils/utils";
 
 @Module({
   imports: [HttpModule],
@@ -12,10 +12,7 @@ import { ENV_KEYS } from "src/utils/keys";
     {
       provide: "AI_CLIENT",
       useFactory: (configService: ConfigService) => {
-        const apiKey = configService.get<string>(ENV_KEYS.googleStudio);
-        if (!apiKey) {
-          throw new Error("Error in credentials");
-        }
+        const apiKey = getEnvValue(configService, "googleStudio");
         return new GoogleGenAI({ apiKey });
       },
       inject: [ConfigService],

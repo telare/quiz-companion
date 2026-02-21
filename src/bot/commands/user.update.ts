@@ -19,8 +19,7 @@ export class UserCommand {
       const message = [
         `<b>📋 Your information:</b>`,
         `🏷 <b>Username:</b> @${username}`,
-        info.totalPoints &&
-          `<b>Total points:</b> <code>${info.totalPoints}</code>`,
+        `<b>Total points:</b> <code>${info.totalPoints ?? 0}</code>`,
       ].join("\n");
 
       await ctx.reply(message, { parse_mode: "HTML" });

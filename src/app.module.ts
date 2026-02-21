@@ -5,7 +5,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AiModule } from "./ai/ai.module";
 import { UsersModule } from "./users/user.module";
 import { QuestionModule } from "./question/question.module";
-import { ENV_KEYS } from "./utils/keys";
+import { getEnvValue } from "./utils/utils";
 
 @Module({
   imports: [
@@ -17,11 +17,8 @@ import { ENV_KEYS } from "./utils/keys";
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const secret = configService.get<string>(ENV_KEYS.mongoURI);
-        if (!secret) {
-          throw new Error("Error in credentials");
-        }
-        return { uri: secret };
+        const uri = getEnvValue(configService, "mongoURI");
+        return { uri };
       },
     }),
     QuestionModule,

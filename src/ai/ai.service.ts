@@ -1,6 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { GoogleGenAI } from "@google/genai";
-import { TelegrafException } from "nestjs-telegraf";
 
 export interface GeneratedQuestion {
   question: string;
@@ -40,7 +39,7 @@ export class AiService {
         },
       });
       if (!resp.text) {
-        throw new Error("Failed to get text from the AI");
+        throw new Error("Empty response from Gemini");
       }
 
       //fix
@@ -48,17 +47,14 @@ export class AiService {
         resp.text,
       ) as GeneratedQuestion;
 
-      console.log(questionData);
       if (!questionData) {
         throw new Error("Error in response of the AI");
       }
+
       return questionData;
     } catch (error: unknown) {
-      if (error instanceof TelegrafException) {
-        console.error(error.message);
-        throw new Error("Failed to generate grammar question.");
-      }
-      throw new Error("An unexpected error occurs.");
+      console.error(`[AiService] Error generating question:`, error);
+      throw error;
     }
   }
 }

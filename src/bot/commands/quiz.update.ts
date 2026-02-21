@@ -1,30 +1,27 @@
-import {
-  Action,
-  Command,
-  Ctx,
-  TelegrafException,
-  Update,
-} from "nestjs-telegraf";
+import { Action, Command, Ctx, Update } from "nestjs-telegraf";
 import { AiService } from "src/ai/ai.service";
 import { QuestionService } from "src/question/question.service";
+import { UserService } from "src/users/user.service";
+import { getErrorMessage } from "src/utils/errorMessage";
 import { Context, Markup } from "telegraf";
 @Update()
 export class QuizCommand {
   constructor(
     private readonly aiService: AiService,
     private readonly questionService: QuestionService,
+    private readonly userService: UserService,
   ) {}
-  @Command("random")
-  async randomCommand(@Ctx() ctx: Context) {
-    const questionData = await this.aiService.getRandomQuestion();
-    if (!questionData) {
-      return await ctx.reply(
-        "Sorry unexpected error, please, try again later.",
-      );
-    }
-
-    const question = questionData.question;
+  @Command("aiRandom")
+  async aiRandomCommand(@Ctx() ctx: Context) {
     try {
+      const questionData = await this.aiService.getRandomQuestion();
+      if (!questionData) {
+        throw new Error(
+          "The AI service is currently unable to generate a question.",
+        );
+      }
+
+      const question = questionData.question;
       const savedQuestion = await this.questionService.createOne({
         correctAnswer: questionData.correctOption,
         options: questionData.options,
@@ -40,11 +37,34 @@ export class QuizCommand {
         { columns: 1 },
       );
       await ctx.reply(question, keyboard);
-    } catch (error) {
-      if (error instanceof TelegrafException) {
-        console.log(error.message);
-        await ctx.reply("Sorry saving error occurs, please, try again later.");
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
+    }
+  }
+  @Command("random")
+  async randomCommand(@Ctx() ctx: Context) {
+    try {
+      const questionData = await this.questionService.findRandom();
+
+      if (!questionData) {
+        throw new Error("");
       }
+      const question = questionData.text;
+      const options = questionData.options;
+
+      // create bot.service and the method createKeyboard
+      const questionId = questionData._id.toString();
+      const keyboard = Markup.inlineKeyboard(
+        options.map((answerText, index) => {
+          const callbackData = `quiz:${questionId}:${index}`;
+
+          return Markup.button.callback(answerText, callbackData);
+        }),
+        { columns: 1 },
+      );
+      await ctx.reply(question, keyboard);
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
     }
   }
 
@@ -67,16 +87,24 @@ export class QuizCommand {
         parseInt(choice),
       );
 
-      const feedback = result.isCorrect
+      const feedback = result.isCorrect;
+      const userName = ctx.from?.username;
+      if (!userName) {
+        throw new Error("Please sign in before answer the question.");
+      }
+      if (feedback) {
+        await this.userService.incrementPoints(userName, 1);
+      } else {
+        await this.userService.decrementPoints(userName, 1);
+      }
+
+      const message = feedback
         ? `✅ Correct!`
         : `❌ Error. The correct answer is: ${result.correctAnswer}`;
 
-      await ctx.reply(feedback);
-    } catch (error) {
-      if (error instanceof TelegrafException) {
-        console.log(error.message);
-        await ctx.reply("Sorry saving error occurs, please, try again later.");
-      }
+      await ctx.reply(message);
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
     }
   }
 }
