@@ -25,7 +25,7 @@ export class QuizCommand {
 
     const question = questionData.question;
     try {
-      const savedQuestion = await this.questionService.create({
+      const savedQuestion = await this.questionService.createOne({
         correctAnswer: questionData.correctOption,
         options: questionData.options,
         text: question,

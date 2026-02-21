@@ -8,7 +8,7 @@ export class Question {
   @Prop({ required: true })
   options: string[];
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   correctAnswer: string;
 }
 
