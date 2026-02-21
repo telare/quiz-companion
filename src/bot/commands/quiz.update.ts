@@ -1,3 +1,7 @@
+import {
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { Action, Command, Ctx, Update } from "nestjs-telegraf";
 import { AiService } from "src/ai/ai.service";
 import { QuestionService } from "src/question/question.service";
@@ -16,7 +20,7 @@ export class QuizCommand {
     try {
       const questionData = await this.aiService.getRandomQuestion();
       if (!questionData) {
-        throw new Error(
+        throw new ServiceUnavailableException(
           "The AI service is currently unable to generate a question.",
         );
       }
@@ -47,7 +51,9 @@ export class QuizCommand {
       const questionData = await this.questionService.findRandom();
 
       if (!questionData) {
-        throw new Error("");
+        throw new ServiceUnavailableException(
+          "AI service failed to generate a question",
+        );
       }
       const question = questionData.text;
       const options = questionData.options;
@@ -90,7 +96,9 @@ export class QuizCommand {
       const feedback = result.isCorrect;
       const userName = ctx.from?.username;
       if (!userName) {
-        throw new Error("Please sign in before answer the question.");
+        throw new UnauthorizedException(
+          "Please sign in before answer the question.",
+        );
       }
       if (feedback) {
         await this.userService.incrementPoints(userName, 1);

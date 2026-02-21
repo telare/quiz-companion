@@ -1,4 +1,9 @@
-import { Inject, Injectable } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { GoogleGenAI } from "@google/genai";
 
 export interface GeneratedQuestion {
@@ -23,6 +28,7 @@ const AI_MODEL = "gemini-2.5-flash";
 const RESPONSE_TYPE = "application/json";
 @Injectable()
 export class AiService {
+  private readonly logger = new Logger(AiService.name);
   constructor(
     @Inject("AI_CLIENT")
     private readonly googleGenAI: GoogleGenAI,
@@ -39,7 +45,7 @@ export class AiService {
         },
       });
       if (!resp.text) {
-        throw new Error("Empty response from Gemini");
+        throw new ServiceUnavailableException("Empty response from Gemini");
       }
 
       //fix
@@ -48,12 +54,15 @@ export class AiService {
       ) as GeneratedQuestion;
 
       if (!questionData) {
-        throw new Error("Error in response of the AI");
+        throw new ServiceUnavailableException("Error in response of the AI");
       }
 
       return questionData;
     } catch (error: unknown) {
-      console.error(`[AiService] Error generating question:`, error);
+      this.logger.error(
+        `Failed to generate random question: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
       throw error;
     }
   }

@@ -1,10 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model } from "mongoose";
 import { Question } from "src/schemas/question.schema";
 
 @Injectable()
 export class QuestionService {
+  private readonly logger = new Logger(QuestionService.name);
   constructor(
     @InjectModel(Question.name) private readonly questionModel: Model<Question>,
   ) {}
@@ -40,8 +41,10 @@ export class QuestionService {
   ): Promise<{ isCorrect: boolean; correctAnswer?: string }> {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
     if (!qinDb) {
-      console.error("[QuestionService] Error finding question");
-      throw new Error(
+      this.logger.warn(
+        `Attempted to check non-existent question ID: ${questionId}`,
+      );
+      throw new NotFoundException(
         "Question has not been founded in the database. Please try again later.",
       );
     }
