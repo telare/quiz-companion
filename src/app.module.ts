@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { BotModule } from "./bot/bot.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -6,6 +6,7 @@ import { AiModule } from "./ai/ai.module";
 import { UsersModule } from "./users/user.module";
 import { QuestionModule } from "./question/question.module";
 import { getEnvValue } from "./utils/utils";
+import { LoggerMiddleware } from "./logger.middleware";
 
 @Module({
   imports: [
@@ -24,4 +25,8 @@ import { getEnvValue } from "./utils/utils";
     QuestionModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("*");
+  }
+}
