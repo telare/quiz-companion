@@ -14,6 +14,14 @@ export class QuestionService {
     return this.questionModel.find().exec();
   }
 
+  async findRandom(): Promise<HydratedDocument<Question> | null> {
+    const result = await this.questionModel
+      .aggregate([{ $sample: { size: 1 } }])
+      .exec();
+    if (result.length === 0) return null;
+    return this.questionModel.hydrate(result[0]);
+  }
+
   async findOne(id: string): Promise<HydratedDocument<Question> | null> {
     return this.questionModel.findById(id).exec();
   }
@@ -38,7 +46,7 @@ export class QuestionService {
   async checkQuestion(
     questionId: string,
     userOptionIndex: number,
-  ): Promise<{ isCorrect: boolean; correctAnswer?: string }> {
+  ): Promise<{ isCorrect: boolean; correctAnswer: string }> {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
     if (!qinDb) {
       this.logger.warn(
@@ -60,10 +68,7 @@ export class QuestionService {
 
     return {
       isCorrect: true,
+      correctAnswer,
     };
-  }
-
-  async findRandom(): Promise<HydratedDocument<Question> | null> {
-    return await this.questionModel.findOne();
   }
 }

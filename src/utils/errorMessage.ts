@@ -38,7 +38,7 @@ export const getErrorMessage = (error: unknown): string => {
   }
 
   if (err.message) {
-    return `❌ ${err.message}`;
+    console.error(err.message);
   }
 
   return "⚡ An unexpected error occurred. Please try again later.";

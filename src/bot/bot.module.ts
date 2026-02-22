@@ -9,6 +9,7 @@ import { HelpCommand } from "./commands/help.update";
 import { QuizCommand } from "./commands/quiz.update";
 import { UserCommand } from "./commands/user.update";
 import { getEnvValue } from "src/utils/utils";
+import { BotService } from "./bot.service";
 
 @Module({
   imports: [
@@ -25,6 +26,6 @@ import { getEnvValue } from "src/utils/utils";
     }),
     AiModule,
   ],
-  providers: [StartCommand, HelpCommand, QuizCommand, UserCommand],
+  providers: [StartCommand, BotService, HelpCommand, QuizCommand, UserCommand],
 })
 export class BotModule {}
