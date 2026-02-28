@@ -32,6 +32,7 @@ export class QuestionService {
 
   async createOne(question: Question): Promise<HydratedDocument<Question>> {
     const newQuestion = new this.questionModel(question);
+    console.log(newQuestion);
     await newQuestion.save();
     return newQuestion;
   }
@@ -46,7 +47,11 @@ export class QuestionService {
   async checkQuestion(
     questionId: string,
     userOptionIndex: number,
-  ): Promise<{ isCorrect: boolean; correctAnswer: string }> {
+  ): Promise<{
+    isCorrect: boolean;
+    correctAnswer: string;
+    explanation: string;
+  }> {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
     if (!qinDb) {
       this.logger.warn(
@@ -56,19 +61,23 @@ export class QuestionService {
         "Question has not been founded in the database. Please try again later.",
       );
     }
-    const correctAnswer = qinDb.correctAnswer;
-    const correctOptIndex = qinDb.options.findIndex((v) => v === correctAnswer);
-
+    const correctOptIndex = qinDb.correctOptionIndex;
+    const correctAnswer = qinDb.options.find((_, i) => i === correctOptIndex);
+    if (!correctAnswer) {
+      throw new Error("error");
+    }
     if (userOptionIndex !== correctOptIndex) {
       return {
         isCorrect: false,
         correctAnswer,
+        explanation: qinDb.explanation,
       };
     }
 
     return {
       isCorrect: true,
       correctAnswer,
+      explanation: qinDb.explanation,
     };
   }
 }

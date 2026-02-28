@@ -3,11 +3,21 @@ import {
   IsArray,
   ArrayNotEmpty,
   ArrayMinSize,
+  IsNumber,
 } from "class-validator";
 
 export class CreateQuestionDTO {
   @IsString()
-  text: string;
+  questionText: string;
+
+  @IsString()
+  topicTitle: string;
+
+  @IsString()
+  difficulty: string;
+
+  @IsString()
+  codeSnippet: string;
 
   @IsArray()
   @IsString({ each: true })
@@ -15,6 +25,9 @@ export class CreateQuestionDTO {
   @ArrayMinSize(3)
   options: string[];
 
+  @IsNumber()
+  correctOptionIndex: number;
+
   @IsString()
-  correctAnswer: string;
+  explanation: string;
 }

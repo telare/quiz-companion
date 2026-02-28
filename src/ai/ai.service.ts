@@ -5,25 +5,8 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { GoogleGenAI } from "@google/genai";
+import { Question } from "src/schemas/question.schema";
 
-export interface GeneratedQuestion {
-  question: string;
-  options: string[];
-  correctOption: string;
-}
-
-const RANDOM_GRAMMAR_PROMPT = `
-      You are an expert in English grammar.
-      Generate one multiple-choice grammar question suitable for an intermediate learner.
-      The question must have 3 possible answers, with only one being correct.
-
-      Return the output *only* as a valid JSON object with the following structure:
-      {
-        "question": "The full question text",
-        "options": ["answer text 1", "answer text 2", "answer text 3"],
-        "correctOption": "the text of the correct answer"
-      }
-    `;
 const AI_MODEL = "gemini-2.5-flash";
 const RESPONSE_TYPE = "application/json";
 @Injectable()
@@ -33,8 +16,38 @@ export class AiService {
     @Inject("AI_CLIENT")
     private readonly googleGenAI: GoogleGenAI,
   ) {}
-  async getRandomQuestion(): Promise<GeneratedQuestion | undefined> {
-    const prompt = RANDOM_GRAMMAR_PROMPT;
+
+  private getPrompt(topic: string = "promises", difficulty: string = "middle") {
+    return `Act as a Senior Technical Interviewer. Your task is to generate high-quality JavaScript interview questions designed for a Telegram Quiz Bot.
+
+Generate a JSON object based on the topic: ${topic} at the following difficulty level: ${difficulty}.
+
+Strict Rules for the JSON output:
+1. ONLY output valid JSON. Do not include any conversational text or markdown formatting (like \`\`\`json) before or after the JSON array.
+2. Adapt the complexity to the ${difficulty} level. If Easy/Junior, focus on syntax and basic definitions. If Hard/Senior, focus on tricky edge cases, performance, memory, and engine behavior.
+3. The "codeSnippet" field must be a single string with properly escaped newlines (\\n) and quotes (\\")
+4. The "options" field must be an array of exactly 4 strings.
+5. The "correctOptionIndex" must be an integer between 0 and 3.
+6. The "explanation" field MUST be strictly under 200 characters to respect Telegram's API limits. It should concisely explain why the correct option is right.
+DON'T REPEAT YOURSELF!!! For quotes use only "" for outside and '' for inside!
+Use the exact following structure:
+  {
+    "topicTitle": "{{Short Title}}",
+    "difficulty": "{{DIFFICULTY}}",
+    "questionText": "{{The question?}}",
+    "codeSnippet": "{{code_with_escaped_newlines_or_null}}",
+    "options": [
+      "{{option_1}}",
+      "{{option_2}}",
+      "{{option_3}}",
+      "{{option_4}}"
+    ],
+    "correctOptionIndex": {{0_to_3}},
+    "explanation": "{{Concise explanation under 200 chars}}"
+  }`;
+  }
+  async getRandomQuestion(): Promise<Question | undefined> {
+    const prompt = this.getPrompt();
 
     try {
       const resp = await this.googleGenAI.models.generateContent({
@@ -49,9 +62,7 @@ export class AiService {
       }
 
       //fix
-      const questionData: GeneratedQuestion = JSON.parse(
-        resp.text,
-      ) as GeneratedQuestion;
+      const questionData: Question = JSON.parse(resp.text) as Question;
 
       if (!questionData) {
         throw new ServiceUnavailableException("Error in response of the AI");

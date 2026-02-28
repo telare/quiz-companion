@@ -3,7 +3,6 @@ import { Markup } from "telegraf";
 
 @Injectable()
 export class BotService {
-  constructor() {}
   createInlineKeyboard(
     displayButtons: string[],
     callbackData: string,
@@ -11,7 +10,9 @@ export class BotService {
   ) {
     return Markup.inlineKeyboard(
       displayButtons.map((answerText, index) => {
-        return Markup.button.callback(answerText, callbackData + `${index}`);
+        const cleanText = answerText.replace(/\\n/g, " ").replace(/\n/g, " ");
+
+        return Markup.button.callback(cleanText, `${callbackData}${index}`);
       }),
       { columns },
     );

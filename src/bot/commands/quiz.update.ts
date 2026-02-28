@@ -28,21 +28,35 @@ export class QuizCommand {
         );
       }
 
-      const question = questionData.question;
       const options = questionData.options;
       const savedQuestion = await this.questionService.createOne({
-        correctAnswer: questionData.correctOption,
+        codeSnippet: questionData.codeSnippet,
+        correctOptionIndex: questionData.correctOptionIndex,
+        difficulty: questionData.difficulty,
+        explanation: questionData.explanation,
         options: questionData.options,
-        text: question,
+        questionText: questionData.questionText,
+        topicTitle: questionData.topicTitle,
       });
       const questionId = savedQuestion._id.toString();
+      const header = `<b>Topic:</b> ${savedQuestion.topicTitle}\n<b>Difficulty:</b> ${savedQuestion.difficulty}\n\n`;
+      const body = `${savedQuestion.questionText}\n`;
+
+      const code = savedQuestion.codeSnippet
+        ? `\n<pre><code class="language-javascript">${savedQuestion.codeSnippet}</code></pre>\n`
+        : "";
+
+      const fullMessage = `${header}${body}${code}`;
       const callbackData = `quiz:${questionId}:`;
       const keyboard = this.botService.createInlineKeyboard(
         options,
         callbackData,
       );
 
-      await ctx.reply(question, keyboard);
+      await ctx.reply(fullMessage, {
+        parse_mode: "HTML",
+        ...keyboard,
+      });
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
@@ -58,17 +72,24 @@ export class QuizCommand {
           "AI service failed to generate a question",
         );
       }
-      const question = questionData.text;
-      const options = questionData.options;
-
       const questionId = questionData._id.toString();
+      const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;
+      const body = `${questionData.questionText}\n`;
+
+      const code = questionData.codeSnippet
+        ? `\n<pre><code class="language-javascript">${questionData.codeSnippet}</code></pre>\n`
+        : "";
+
+      const fullMessage = `${header}${body}${code}`;
       const callbackData = `quiz:${questionId}:`;
       const keyboard = this.botService.createInlineKeyboard(
-        options,
+        questionData.options,
         callbackData,
       );
-
-      await ctx.reply(question, keyboard);
+      await ctx.reply(fullMessage, {
+        parse_mode: "HTML",
+        ...keyboard,
+      });
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
@@ -106,11 +127,22 @@ export class QuizCommand {
         await this.userService.decrementPoints(userName, 1);
       }
       const correctAnswer = result.correctAnswer;
-      const message = feedback
-        ? `✅ Your answer: ${correctAnswer} is correct! You have gained 1 point!`
-        : `❌ Error. The correct answer is: ${correctAnswer}. You have lost 1 point.`;
+      const explanation = result.explanation;
 
-      await ctx.reply(message);
+      const statusEmoji = feedback ? "✅" : "❌";
+      const statusText = feedback
+        ? `<b>Correct!</b> You've gained 1 point.`
+        : `<b>Incorrect.</b> You've lost 1 point.`;
+
+      const message = [
+        `${statusEmoji} ${statusText}`,
+        `\n<b>The correct answer was:</b>`,
+        `<code>${correctAnswer}</code>`,
+        `\n<b>Explanation:</b>`,
+        `<i>${explanation}</i>`,
+      ].join("\n");
+
+      await ctx.reply(message, { parse_mode: "HTML" });
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
