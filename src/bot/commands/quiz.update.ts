@@ -7,7 +7,7 @@ import { AiService } from "../../ai/ai.service";
 import { QuestionService } from "../../question/question.service";
 import { UserService } from "../../users/user.service";
 import { getErrorMessage } from "../../utils/errorMessage";
-import { Context, Markup } from "telegraf";
+import { Context } from "telegraf";
 import { BotService } from "../bot.service";
 @Update()
 export class QuizCommand {
@@ -99,49 +99,53 @@ export class QuizCommand {
   async handleRandomQuestionAnswer(@Ctx() ctx: Context) {
     try {
       await ctx.answerCbQuery();
-      const disabledKeyboard = Markup.inlineKeyboard([]);
-
-      await ctx.editMessageReplyMarkup(disabledKeyboard.reply_markup);
       const cbQuery = ctx.callbackQuery;
 
       if (!cbQuery || !("data" in cbQuery)) {
         return;
       }
+
       const [, id, choice] = cbQuery.data.split(":");
+
+      const question = await this.questionService.findOne(id);
+      if (!question) return;
+
       const result = await this.questionService.checkQuestion(
         id,
         parseInt(choice),
       );
 
-      const feedback = result.isCorrect;
       const userName = ctx.from?.username;
       if (!userName) {
-        throw new UnauthorizedException(
-          "Please sign in before answer the question.",
-        );
+        throw new UnauthorizedException("Please sign in.");
       }
-      if (feedback) {
+
+      if (result.isCorrect) {
         await this.userService.incrementPoints(userName, 1);
       } else {
         await this.userService.decrementPoints(userName, 1);
       }
-      const correctAnswer = result.correctAnswer;
-      const explanation = result.explanation;
 
-      const statusEmoji = feedback ? "✅" : "❌";
-      const statusText = feedback
+      const header = `<b>Topic:</b> ${question.topicTitle}\n<b>Difficulty:</b> ${question.difficulty}\n\n`;
+      const body = `${question.questionText}\n`;
+      const code = question.codeSnippet
+        ? `\n<pre><code class="language-javascript">${question.codeSnippet}</code></pre>\n`
+        : "";
+
+      const statusEmoji = result.isCorrect ? "✅" : "❌";
+      const statusText = result.isCorrect
         ? `<b>Correct!</b> You've gained 1 point.`
         : `<b>Incorrect.</b> You've lost 1 point.`;
 
-      const message = [
+      const feedback = [
+        `\n— — — — — — — — — — — —`,
         `${statusEmoji} ${statusText}`,
-        `\n<b>The correct answer was:</b>`,
-        `<code>${correctAnswer}</code>`,
+        `<b>Correct answer:</b> <code>${result.correctAnswer}</code>`,
         `\n<b>Explanation:</b>`,
-        `<i>${explanation}</i>`,
+        `<i>${result.explanation}</i>`,
       ].join("\n");
 
-      await ctx.editMessageText(message, {
+      await ctx.editMessageText(header + body + code + feedback, {
         parse_mode: "HTML",
       });
     } catch (error: unknown) {

@@ -19,16 +19,13 @@ export class BotController {
     const updateId = req.body?.update_id;
     this.logger.log(`---> Received Update ID: ${updateId}`);
     try {
-      // Засекаем время обработки
       const start = Date.now();
 
-      // ВАЖНО: Ждем завершения обработки Telegraf
       await this.bot.handleUpdate(req.body);
 
       const duration = Date.now() - start;
       this.logger.log(`<--- Processed Update ID: ${updateId} in ${duration}ms`);
 
-      // Явно отправляем 200 OK только ПОСЛЕ обработки
       return res.status(200).send("OK");
     } catch (e) {
       console.error("Error handling update:", e);
