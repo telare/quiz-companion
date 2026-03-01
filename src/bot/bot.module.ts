@@ -18,6 +18,7 @@ import { BotController } from "./bot.controller";
     QuestionModule,
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const secret = getEnvValue(configService, "tgBot");
         const isProd = getEnvValue(configService, "nodeEnv") === "production";
