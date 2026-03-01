@@ -14,11 +14,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   app.useGlobalPipes(new ValidationPipe());
 
-  // Important: Use a prefix if your webhook path starts with /api
-  // app.setGlobalPrefix('api');
-
-  await app.init();
+  await app.listen(process.env.PORT || 3000);
   return server;
+}
+if (process.env.NODE_ENV !== "production") {
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  bootstrap();
 }
 
 export default async (req: any, res: any) => {

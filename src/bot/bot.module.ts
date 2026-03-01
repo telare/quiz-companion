@@ -27,14 +27,14 @@ import { BotController } from "./bot.controller";
 
         return {
           token: secret,
-          launchOptions: isProd
+          launchOptions: !isProd
             ? {
                 webhook: {
                   domain: `https://${domain}`,
                   hookPath,
                 },
               }
-            : false,
+            : {},
         };
       },
     }),

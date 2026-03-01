@@ -97,18 +97,17 @@ export class QuizCommand {
 
   @Action(/^quiz:/)
   async handleRandomQuestionAnswer(@Ctx() ctx: Context) {
-    await ctx.answerCbQuery();
-    await ctx.reply("Your answer received, please wait for a little bit... ⏳");
-    const disabledKeyboard = Markup.inlineKeyboard([]);
-
-    await ctx.editMessageReplyMarkup(disabledKeyboard.reply_markup);
-    const cbQuery = ctx.callbackQuery;
-
-    if (!cbQuery || !("data" in cbQuery)) {
-      return;
-    }
-    const [, id, choice] = cbQuery.data.split(":");
     try {
+      await ctx.answerCbQuery();
+      const disabledKeyboard = Markup.inlineKeyboard([]);
+
+      await ctx.editMessageReplyMarkup(disabledKeyboard.reply_markup);
+      const cbQuery = ctx.callbackQuery;
+
+      if (!cbQuery || !("data" in cbQuery)) {
+        return;
+      }
+      const [, id, choice] = cbQuery.data.split(":");
       const result = await this.questionService.checkQuestion(
         id,
         parseInt(choice),
@@ -142,7 +141,9 @@ export class QuizCommand {
         `<i>${explanation}</i>`,
       ].join("\n");
 
-      await ctx.reply(message, { parse_mode: "HTML" });
+      await ctx.editMessageText(message, {
+        parse_mode: "HTML",
+      });
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
