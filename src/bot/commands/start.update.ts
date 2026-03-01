@@ -1,5 +1,5 @@
 import { Ctx, Start, Update } from "nestjs-telegraf";
-import { UserService } from "src/users/user.service";
+import { UserService } from "../../users/user.service";
 import { Context } from "telegraf";
 
 @Update()

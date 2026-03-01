@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model } from "mongoose";
-import { Question } from "src/schemas/question.schema";
+import { Question } from "../schemas/question.schema";
 
 @Injectable()
 export class QuestionService {

@@ -1,7 +1,7 @@
 import { Body, Controller, ParseArrayPipe, Post } from "@nestjs/common";
 import { QuestionService } from "./question.service";
 import { CreateQuestionDTO } from "./dto/question.dto";
-import { Question } from "src/schemas/question.schema";
+import { Question } from "../schemas/question.schema";
 
 @Controller("questions")
 export class QuestionController {

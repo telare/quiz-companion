@@ -3,10 +3,10 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { Action, Command, Ctx, Update } from "nestjs-telegraf";
-import { AiService } from "src/ai/ai.service";
-import { QuestionService } from "src/question/question.service";
-import { UserService } from "src/users/user.service";
-import { getErrorMessage } from "src/utils/errorMessage";
+import { AiService } from "../../ai/ai.service";
+import { QuestionService } from "../../question/question.service";
+import { UserService } from "../../users/user.service";
+import { getErrorMessage } from "../../utils/errorMessage";
 import { Context, Markup } from "telegraf";
 import { BotService } from "../bot.service";
 @Update()

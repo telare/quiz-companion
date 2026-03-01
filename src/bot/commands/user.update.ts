@@ -1,5 +1,5 @@
 import { Command, Ctx, Update } from "nestjs-telegraf";
-import { UserService } from "src/users/user.service";
+import { UserService } from "../../users/user.service";
 import { Context } from "telegraf";
 @Update()
 export class UserCommand {
