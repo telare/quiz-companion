@@ -10,6 +10,7 @@ import { QuizCommand } from "./commands/quiz.update";
 import { UserCommand } from "./commands/user.update";
 import { getEnvValue } from "src/utils/utils";
 import { BotService } from "./bot.service";
+import { BotController } from "./bot.controller";
 
 @Module({
   imports: [
@@ -19,13 +20,26 @@ import { BotService } from "./bot.service";
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const secret = getEnvValue(configService, "tgBot");
+        const isProd = getEnvValue(configService, "nodeEnv") === "production";
+        const domain = getEnvValue(configService, "vercelDomain");
+        const hookPath = getEnvValue(configService, "telegramWebhookPath");
 
-        return { token: secret };
+        return {
+          token: secret,
+          launchOptions: isProd
+            ? {
+                webhook: {
+                  domain: `https://${domain}`,
+                  hookPath,
+                },
+              }
+            : false,
+        };
       },
-      inject: [ConfigService],
     }),
     AiModule,
   ],
   providers: [StartCommand, BotService, HelpCommand, QuizCommand, UserCommand],
+  controllers: [BotController],
 })
 export class BotModule {}
