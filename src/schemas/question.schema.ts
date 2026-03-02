@@ -11,8 +11,11 @@ export class Question {
   @Prop({ required: true })
   difficulty: string;
 
-  @Prop({ required: true })
-  codeSnippet: string;
+  @Prop({
+    type: String,
+    default: null,
+  })
+  codeSnippet: string | null;
 
   @Prop({ required: true })
   options: string[];

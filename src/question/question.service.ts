@@ -14,6 +14,16 @@ export class QuestionService {
     return this.questionModel.find().exec();
   }
 
+  async findUniqueTopics() {
+    return this.questionModel.distinct("topicTitle").exec();
+  }
+
+  async findOneByTopic(
+    topic: string,
+  ): Promise<HydratedDocument<Question> | null> {
+    return this.questionModel.findOne({ topicTitle: topic }).exec();
+  }
+
   async findRandom(): Promise<HydratedDocument<Question> | null> {
     const result = await this.questionModel
       .aggregate([{ $sample: { size: 1 } }])

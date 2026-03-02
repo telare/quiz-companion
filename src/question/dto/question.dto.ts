@@ -4,6 +4,7 @@ import {
   ArrayNotEmpty,
   ArrayMinSize,
   IsNumber,
+  ValidateIf,
 } from "class-validator";
 
 export class CreateQuestionDTO {
@@ -17,7 +18,8 @@ export class CreateQuestionDTO {
   difficulty: string;
 
   @IsString()
-  codeSnippet: string;
+  @ValidateIf((_, value) => value !== null)
+  codeSnippet: string | null;
 
   @IsArray()
   @IsString({ each: true })

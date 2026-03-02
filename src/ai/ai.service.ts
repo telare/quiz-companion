@@ -25,10 +25,12 @@ Generate a JSON object based on the topic: ${topic} at the following difficulty 
 Strict Rules for the JSON output:
 1. ONLY output valid JSON. Do not include any conversational text or markdown formatting (like \`\`\`json) before or after the JSON array.
 2. Adapt the complexity to the ${difficulty} level. If Easy/Junior, focus on syntax and basic definitions. If Hard/Senior, focus on tricky edge cases, performance, memory, and engine behavior.
-3. The "codeSnippet" field must be a single string with properly escaped newlines (\\n) and quotes (\\")
+3. The "codeSnippet" field must be a single string with properly escaped newlines (\\n) and quotes (\\"). If this question is theoretical you can mark this field with null value.
 4. The "options" field must be an array of exactly 4 strings.
 5. The "correctOptionIndex" must be an integer between 0 and 3.
 6. The "explanation" field MUST be strictly under 200 characters to respect Telegram's API limits. It should concisely explain why the correct option is right.
+7. TOPIC NORMALIZATION: "topicTitle" must be 1-2 words max, first letter uppercase than all lowercase, and use standard terms (e.g., "Promises", "This keyword", "Closures", "Event loop"). No "JS" prefix.
+
 DON'T REPEAT YOURSELF!!! For quotes use only "" for outside and '' for inside!
 Use the exact following structure:
   {

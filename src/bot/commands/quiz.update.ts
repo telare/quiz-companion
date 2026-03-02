@@ -9,6 +9,8 @@ import { UserService } from "../../users/user.service";
 import { getErrorMessage } from "../../utils/errorMessage";
 import { Context } from "telegraf";
 import { BotService } from "../bot.service";
+import { HydratedDocument } from "mongoose";
+import { Question } from "src/schemas/question.schema";
 @Update()
 export class QuizCommand {
   constructor(
@@ -17,6 +19,24 @@ export class QuizCommand {
     private readonly userService: UserService,
     private readonly botService: BotService,
   ) {}
+
+  private buildQuestion(questionData: HydratedDocument<Question>) {
+    const questionId = questionData._id.toString();
+    const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;
+    const body = `${questionData.questionText}\n`;
+
+    const code = questionData.codeSnippet
+      ? `\n<pre><code class="language-javascript">${questionData.codeSnippet}</code></pre>\n`
+      : "";
+
+    const fullMessage = `${header}${body}${code}`;
+    const callbackData = `quiz:${questionId}:`;
+    const keyboard = this.botService.createQuestionAnswersKeyboard(
+      questionData.options,
+      callbackData,
+    );
+    return { fullMessage, keyboard };
+  }
 
   @Command("airandom")
   async aiRandomCommand(@Ctx() ctx: Context) {
@@ -28,7 +48,6 @@ export class QuizCommand {
         );
       }
 
-      const options = questionData.options;
       const savedQuestion = await this.questionService.createOne({
         codeSnippet: questionData.codeSnippet,
         correctOptionIndex: questionData.correctOptionIndex,
@@ -38,21 +57,8 @@ export class QuizCommand {
         questionText: questionData.questionText,
         topicTitle: questionData.topicTitle,
       });
-      const questionId = savedQuestion._id.toString();
-      const header = `<b>Topic:</b> ${savedQuestion.topicTitle}\n<b>Difficulty:</b> ${savedQuestion.difficulty}\n\n`;
-      const body = `${savedQuestion.questionText}\n`;
 
-      const code = savedQuestion.codeSnippet
-        ? `\n<pre><code class="language-javascript">${savedQuestion.codeSnippet}</code></pre>\n`
-        : "";
-
-      const fullMessage = `${header}${body}${code}`;
-      const callbackData = `quiz:${questionId}:`;
-      const keyboard = this.botService.createInlineKeyboard(
-        options,
-        callbackData,
-      );
-
+      const { fullMessage, keyboard } = this.buildQuestion(savedQuestion);
       await ctx.reply(fullMessage, {
         parse_mode: "HTML",
         ...keyboard,
@@ -69,24 +75,35 @@ export class QuizCommand {
 
       if (!questionData) {
         throw new ServiceUnavailableException(
-          "AI service failed to generate a question",
+          "Service failed to generate a question",
         );
       }
-      const questionId = questionData._id.toString();
-      const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;
-      const body = `${questionData.questionText}\n`;
-
-      const code = questionData.codeSnippet
-        ? `\n<pre><code class="language-javascript">${questionData.codeSnippet}</code></pre>\n`
-        : "";
-
-      const fullMessage = `${header}${body}${code}`;
-      const callbackData = `quiz:${questionId}:`;
-      const keyboard = this.botService.createInlineKeyboard(
-        questionData.options,
-        callbackData,
-      );
+      const { fullMessage, keyboard } = this.buildQuestion(questionData);
       await ctx.reply(fullMessage, {
+        parse_mode: "HTML",
+        ...keyboard,
+      });
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
+    }
+  }
+
+  @Command("randombytopic")
+  async randomByTopicCommand(@Ctx() ctx: Context) {
+    try {
+      const topics = await this.questionService.findUniqueTopics();
+
+      if (!topics) {
+        throw new ServiceUnavailableException(
+          "Service failed to retrieve question topics",
+        );
+      }
+      const keyboardData = topics.map((topic) => ({
+        buttonText: topic,
+        callbackData: `selectedTopic:${topic}`,
+      }));
+      const keyboard = this.botService.createInlineKeyboard(keyboardData, 3);
+      await ctx.reply("Pick any topic from the list below:", {
         parse_mode: "HTML",
         ...keyboard,
       });
@@ -151,5 +168,30 @@ export class QuizCommand {
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
+  }
+  @Action(/selectedTopic:(.+)/)
+  async onTopicPick(@Ctx() ctx: Context) {
+    const cbQuery = ctx.callbackQuery;
+
+    if (!cbQuery || !("data" in cbQuery)) {
+      return;
+    }
+
+    const [, topicName] = cbQuery.data.split(":");
+
+    await ctx.editMessageText(`You picked: ${topicName}`);
+
+    const question = await this.questionService.findOneByTopic(topicName);
+
+    if (!question) {
+      throw new ServiceUnavailableException(
+        "Service failed to generate a question",
+      );
+    }
+    const { fullMessage, keyboard } = this.buildQuestion(question);
+    await ctx.reply(fullMessage, {
+      parse_mode: "HTML",
+      ...keyboard,
+    });
   }
 }
