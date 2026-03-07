@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { FavoriteQuestionService } from "./favorite-question.service";
 import { FavoriteQuestionController } from "./favorite-question.controller";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Favorite, FavoriteSchema } from "src/schemas/favorite.schema";
+import { Favorite, FavoriteSchema } from "../schemas/favorite.schema";
 
 @Module({
   imports: [

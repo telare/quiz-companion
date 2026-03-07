@@ -10,8 +10,8 @@ import { getErrorMessage } from "../../utils/errorMessage";
 import { Context, Markup } from "telegraf";
 import { BotService } from "../bot.service";
 import { HydratedDocument } from "mongoose";
-import { Question } from "src/schemas/question.schema";
-import { FavoriteQuestionService } from "src/favorite-question/favorite-question.service";
+import { Question } from "../../schemas/question.schema";
+import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
 @Update()
 export class QuizCommand {
   constructor(

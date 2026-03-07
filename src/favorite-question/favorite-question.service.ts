@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { CreateFavoriteQuestionDto } from "./dto/create-favorite-question.dto";
 import { InjectModel } from "@nestjs/mongoose";
-import { Favorite } from "src/schemas/favorite.schema";
+import { Favorite } from "../schemas/favorite.schema";
 import { DeleteResult, HydratedDocument, Model } from "mongoose";
 
 @Injectable()
