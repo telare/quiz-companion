@@ -5,8 +5,8 @@
 # ---------------------------------------------------------
 
 # Detailed changes (one per line):
-- type(scope): description
-- type(scope): description
+# - type(scope): description
+# - type(scope): description
 
 # Breaking Changes (if any):
 # BREAKING CHANGE: <description>

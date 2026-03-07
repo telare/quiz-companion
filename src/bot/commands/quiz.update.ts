@@ -107,20 +107,20 @@ export class QuizCommand {
   @Command("randombytopic")
   async randomByTopicCommand(@Ctx() ctx: Context) {
     try {
-      const topics = await this.questionService.findUniqueTopics();
+      const topics = await this.questionService.countQuestionsByTopic();
 
       if (!topics) {
         throw new ServiceUnavailableException(
           "Service failed to retrieve question topics",
         );
       }
+
       const keyboardData = topics.map((topic) => ({
-        buttonText: topic,
-        callbackData: `selectedTopic:${topic}`,
+        buttonText: `${topic._id} [${topic.totalByTopic}]`,
+        callbackData: `selectedTopic:${topic._id}`,
       }));
       const keyboard = this.botService.createInlineKeyboard(keyboardData);
       await ctx.reply("Pick any topic from the list below:", {
-        parse_mode: "HTML",
         ...keyboard,
       });
     } catch (error: unknown) {

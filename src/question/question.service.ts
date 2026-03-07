@@ -19,6 +19,21 @@ export class QuestionService {
     return this.questionModel.distinct("topicTitle").exec();
   }
 
+  async countQuestionsByTopic(): Promise<
+    { _id: string; totalByTopic: number }[]
+  > {
+    return this.questionModel.aggregate([
+      {
+        $group: {
+          _id: "$topicTitle",
+          totalByTopic: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+  }
+
   async findOneByTopic(
     topic: string,
   ): Promise<HydratedDocument<Question> | null> {
