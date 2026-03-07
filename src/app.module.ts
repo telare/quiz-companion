@@ -7,6 +7,7 @@ import { UsersModule } from "./users/user.module";
 import { QuestionModule } from "./question/question.module";
 import { getEnvValue } from "./utils/utils";
 import { LoggerMiddleware } from "./logger.middleware";
+import { FavoriteQuestionModule } from "./favorite-question/favorite-question.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { LoggerMiddleware } from "./logger.middleware";
       },
     }),
     QuestionModule,
+    FavoriteQuestionModule,
   ],
 })
 export class AppModule implements NestModule {

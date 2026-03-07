@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 @Schema()
 export class Question {
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, unique: true })
   questionText: string;
 
   @Prop({ required: true })

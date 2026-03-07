@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { HydratedDocument, Model } from "mongoose";
 import { User } from "../schemas/user.schema";
 
 @Injectable()
@@ -9,15 +9,15 @@ export class UserService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<HydratedDocument<User>[]> {
     return this.userModel.find().exec();
   }
 
-  async findOne(id: string): Promise<User | null> {
+  async findOne(id: string): Promise<HydratedDocument<User> | null> {
     return this.userModel.findById(id).exec();
   }
 
-  async findByName(name: string): Promise<User | null> {
+  async findByName(name: string): Promise<HydratedDocument<User> | null> {
     return this.userModel.findOne({ username: name });
   }
 

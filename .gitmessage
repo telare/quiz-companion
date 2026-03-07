@@ -1,0 +1,15 @@
+# <type>(<scope>): <short summary (max 50 chars)>
+# ---------------------------------------------------------
+# Valid types: feat, fix, refactor, chore, docs, style, test, db, build
+# Valid scopes: question, ai, bot, auth, core, schema, ui
+# ---------------------------------------------------------
+
+# Detailed changes (one per line):
+- type(scope): description
+- type(scope): description
+
+# Breaking Changes (if any):
+# BREAKING CHANGE: <description>
+
+# Footer (Issue references):
+# Closes #123

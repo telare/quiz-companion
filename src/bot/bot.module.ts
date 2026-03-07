@@ -11,11 +11,13 @@ import { UserCommand } from "./commands/user.update";
 import { getEnvValue } from "../utils/utils";
 import { BotService } from "./bot.service";
 import { BotController } from "./bot.controller";
+import { FavoriteQuestionModule } from "src/favorite-question/favorite-question.module";
 
 @Module({
   imports: [
     UsersModule,
     QuestionModule,
+    FavoriteQuestionModule,
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

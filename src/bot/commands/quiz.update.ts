@@ -7,10 +7,11 @@ import { AiService } from "../../ai/ai.service";
 import { QuestionService } from "../../question/question.service";
 import { UserService } from "../../users/user.service";
 import { getErrorMessage } from "../../utils/errorMessage";
-import { Context } from "telegraf";
+import { Context, Markup } from "telegraf";
 import { BotService } from "../bot.service";
 import { HydratedDocument } from "mongoose";
 import { Question } from "src/schemas/question.schema";
+import { FavoriteQuestionService } from "src/favorite-question/favorite-question.service";
 @Update()
 export class QuizCommand {
   constructor(
@@ -18,6 +19,7 @@ export class QuizCommand {
     private readonly questionService: QuestionService,
     private readonly userService: UserService,
     private readonly botService: BotService,
+    private readonly favoriteService: FavoriteQuestionService,
   ) {}
 
   private buildQuestion(questionData: HydratedDocument<Question>) {
@@ -31,10 +33,24 @@ export class QuizCommand {
 
     const fullMessage = `${header}${body}${code}`;
     const callbackData = `quiz:${questionId}:`;
-    const keyboard = this.botService.createQuestionAnswersKeyboard(
-      questionData.options,
-      callbackData,
-    );
+
+    const keyboardData = questionData.options.map((opt, i) => ({
+      buttonText: opt,
+      callbackData: callbackData + i,
+    }));
+    const saveQuestionButton = {
+      buttonText: "⭐ Save question",
+      callbackData: `save:${questionId}`,
+    };
+    const nextQuestionButton = {
+      buttonText: "⏭ Next",
+      callbackData: `next`,
+    };
+    const keyboard = this.botService.createInlineKeyboard([
+      ...keyboardData,
+      saveQuestionButton,
+      nextQuestionButton,
+    ]);
     return { fullMessage, keyboard };
   }
 
@@ -102,11 +118,64 @@ export class QuizCommand {
         buttonText: topic,
         callbackData: `selectedTopic:${topic}`,
       }));
-      const keyboard = this.botService.createInlineKeyboard(keyboardData, 3);
+      const keyboard = this.botService.createInlineKeyboard(keyboardData);
       await ctx.reply("Pick any topic from the list below:", {
         parse_mode: "HTML",
         ...keyboard,
       });
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
+    }
+  }
+
+  @Command("saved")
+  async handleSavedQuestions(@Ctx() ctx: Context) {
+    try {
+      const userName = ctx.from?.username;
+      if (!userName) {
+        throw new UnauthorizedException("Please sign in.");
+      }
+      const user = await this.userService.findByName(userName);
+      if (!user) {
+        throw new UnauthorizedException("Please sign in.");
+      }
+      const userId = user._id.toString();
+      const saved = await this.favoriteService.findAll(userId);
+
+      if (!saved || saved.length === 0) {
+        await ctx.reply(
+          "You don't have any saved questions.\nTo save press the '⭐ Save question' button under any question.",
+        );
+        return;
+      }
+      await ctx.reply(`📚 *Your saved questions* — ${saved.length} total`, {
+        parse_mode: "Markdown",
+      });
+      for (const s of saved) {
+        const q = await this.questionService.findById(s.questionId);
+
+        if (!q) {
+          continue;
+        }
+        const { fullMessage: questionMessage } = this.buildQuestion(q);
+        const optionLabels = ["A", "B", "C", "D"];
+        const optionsText = q.options
+          .map((opt, i) => `${optionLabels[i]}) ${opt}`)
+          .join("\n");
+        const fullMessage = [questionMessage, optionsText].join("\n");
+        const keyboard = Markup.inlineKeyboard([
+          [
+            {
+              text: "🗑 Remove from saved",
+              callback_data: `unsave:${s.questionId}`,
+            },
+          ],
+        ]);
+        await ctx.reply(fullMessage, {
+          parse_mode: "HTML",
+          ...keyboard,
+        });
+      }
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
@@ -124,9 +193,8 @@ export class QuizCommand {
 
       const [, id, choice] = cbQuery.data.split(":");
 
-      const question = await this.questionService.findOne(id);
+      const question = await this.questionService.findById(id);
       if (!question) return;
-
       const result = await this.questionService.checkQuestion(
         id,
         parseInt(choice),
@@ -161,14 +229,50 @@ export class QuizCommand {
         `\n<b>Explanation:</b>`,
         `<i>${result.explanation}</i>`,
       ].join("\n");
-
+      const saveQuestionButton = {
+        buttonText: "⭐ Save question",
+        callbackData: `save:${question._id.toString()}`,
+      };
+      const nextQuestionButton = {
+        buttonText: "⏭ Next",
+        callbackData: "next",
+      };
+      const keyboard = this.botService.createInlineKeyboard([
+        saveQuestionButton,
+        nextQuestionButton,
+      ]);
       await ctx.editMessageText(header + body + code + feedback, {
         parse_mode: "HTML",
+        ...keyboard,
       });
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
   }
+
+  @Action("next")
+  async handleNextQuestion(@Ctx() ctx: Context) {
+    try {
+      await ctx.answerCbQuery();
+      const cbQuery = ctx.callbackQuery;
+
+      if (!cbQuery || !("data" in cbQuery)) return;
+
+      const questionData = await this.questionService.findRandom();
+      if (!questionData) {
+        throw new ServiceUnavailableException("Failed to get next question");
+      }
+
+      const { fullMessage, keyboard } = this.buildQuestion(questionData);
+      await ctx.editMessageText(fullMessage, {
+        parse_mode: "HTML",
+        ...keyboard,
+      });
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
+    }
+  }
+
   @Action(/selectedTopic:(.+)/)
   async onTopicPick(@Ctx() ctx: Context) {
     const cbQuery = ctx.callbackQuery;
@@ -193,5 +297,129 @@ export class QuizCommand {
       parse_mode: "HTML",
       ...keyboard,
     });
+  }
+
+  @Action(/^save:/)
+  async handleSaveQuestion(@Ctx() ctx: Context) {
+    try {
+      await ctx.answerCbQuery();
+      const cbQuery = ctx.callbackQuery;
+
+      if (!cbQuery || !("data" in cbQuery)) {
+        return;
+      }
+
+      const [, questionId] = cbQuery.data.split(":");
+      const userName = ctx.from?.username;
+      if (!userName) {
+        throw new UnauthorizedException("Please sign in.");
+      }
+      const user = await this.userService.findByName(userName);
+      if (!user) {
+        throw new UnauthorizedException("Please sign in.");
+      }
+      const userId = user._id.toString();
+      const existing = await this.favoriteService.findOne({
+        userId,
+        questionId,
+      });
+      if (existing) {
+        await ctx.reply(
+          "You have already saved this question. To see it, send the /saved command",
+        );
+        return;
+      }
+      await this.favoriteService.create({
+        userId,
+        questionId,
+      });
+
+      const message = cbQuery.message;
+
+      if (!message || !("reply_markup" in message)) {
+        console.warn(
+          "Message is inaccessible or does not support reply_markup",
+        );
+        return;
+      }
+
+      const currentKeyboard = message.reply_markup?.inline_keyboard ?? [];
+
+      const updatedKeyboard = currentKeyboard.map((row) =>
+        row.map((button) =>
+          "callback_data" in button &&
+          button.callback_data === `save:${questionId}`
+            ? {
+                text: "🗑 Remove from saved",
+                callback_data: `unsave:${questionId}`,
+              }
+            : button,
+        ),
+      );
+
+      await ctx.editMessageReplyMarkup({ inline_keyboard: updatedKeyboard });
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
+    }
+  }
+
+  @Action(/^unsave:/)
+  async handleUnSaveQuestion(@Ctx() ctx: Context) {
+    try {
+      await ctx.answerCbQuery();
+      const cbQuery = ctx.callbackQuery;
+
+      if (!cbQuery || !("data" in cbQuery)) {
+        return;
+      }
+
+      const [, questionId] = cbQuery.data.split(":");
+      const userName = ctx.from?.username;
+      if (!userName) {
+        throw new UnauthorizedException("Please sign in.");
+      }
+      const user = await this.userService.findByName(userName);
+      if (!user) {
+        throw new UnauthorizedException("Please sign in.");
+      }
+      const userId = user._id.toString();
+      const favorite = await this.favoriteService.findOne({
+        userId,
+        questionId,
+      });
+      if (!favorite) {
+        await ctx.editMessageText(
+          "This question has already been removed successfully",
+        );
+        return;
+      }
+      await this.favoriteService.removeOne({
+        userId,
+        questionId,
+      });
+      const message = cbQuery.message;
+
+      if (!message || !("reply_markup" in message)) {
+        console.warn(
+          "Message is inaccessible or does not support reply_markup",
+        );
+        return;
+      }
+
+      const currentKeyboard = message.reply_markup?.inline_keyboard ?? [];
+
+      const updatedKeyboard = currentKeyboard.map((row) =>
+        row.map((button) =>
+          "callback_data" in button &&
+          button.callback_data === `unsave:${questionId}`
+            ? { text: "⭐ Save question", callback_data: `save:${questionId}` }
+            : button,
+        ),
+      );
+
+      await ctx.editMessageReplyMarkup({ inline_keyboard: updatedKeyboard });
+    } catch (error: unknown) {
+      await ctx.reply(getErrorMessage(error));
+    }
   }
 }

@@ -22,31 +22,29 @@ export class AiService {
 
 Generate a JSON object based on the topic: ${topic} at the following difficulty level: ${difficulty}.
 
-Strict Rules for the JSON output:
-1. ONLY output valid JSON. Do not include any conversational text or markdown formatting (like \`\`\`json) before or after the JSON array.
-2. Adapt the complexity to the ${difficulty} level. If Easy/Junior, focus on syntax and basic definitions. If Hard/Senior, focus on tricky edge cases, performance, memory, and engine behavior.
-3. The "codeSnippet" field must be a single string with properly escaped newlines (\\n) and quotes (\\"). If this question is theoretical you can mark this field with null value.
-4. The "options" field must be an array of exactly 4 strings.
-5. The "correctOptionIndex" must be an integer between 0 and 3.
-6. The "explanation" field MUST be strictly under 200 characters to respect Telegram's API limits. It should concisely explain why the correct option is right.
-7. TOPIC NORMALIZATION: "topicTitle" must be 1-2 words max, first letter uppercase than all lowercase, and use standard terms (e.g., "Promises", "This keyword", "Closures", "Event loop"). No "JS" prefix.
+TOPIC RESTRICTION:
+The "topicTitle" field MUST be exactly one of the following strings. If the provided ${topic} does not match exactly, map it to the closest relevant category from this list:
+[Closures, Promises, Event loop, Hoisting, Prototypes, Scopes, This keyword, Async/Await, Generators, Garbage collection, Classes, Currying, Destructuring, Map and Set, WeakMap, Proxy, Reflect, Modules, Strict mode, Type coercion, Symbols, Memory management, Web APIs, DOM API, Design patterns, Performance]
 
-DON'T REPEAT YOURSELF!!! For quotes use only "" for outside and '' for inside!
-Use the exact following structure:
-  {
-    "topicTitle": "{{Short Title}}",
-    "difficulty": "{{DIFFICULTY}}",
-    "questionText": "{{The question?}}",
-    "codeSnippet": "{{code_with_escaped_newlines_or_null}}",
-    "options": [
-      "{{option_1}}",
-      "{{option_2}}",
-      "{{option_3}}",
-      "{{option_4}}"
-    ],
-    "correctOptionIndex": {{0_to_3}},
-    "explanation": "{{Concise explanation under 200 chars}}"
-  }`;
+Strict Rules for the JSON output:
+1. ONLY output valid JSON. Do not include any conversational text or markdown formatting (like json) before or after the JSON.
+2. Adapt complexity to the ${difficulty} level. Focus on syntax/basics for Junior; focus on edge cases, engine internals, and performance for Senior.
+3. The "codeSnippet" field must be a single string with properly escaped newlines (\\n) and quotes (\\"). If theoretical, set to null.
+4. The "options" field must be an array of exactly 4 strings.
+5. The "correctOptionIndex" must be an integer (0-3).
+6. The "explanation" field MUST be strictly under 200 characters. Concisely explain the logic or the "gotcha".
+7. Use only double quotes "" for JSON keys and string values. Inside code snippets, use single quotes '' where possible.
+
+Structure:
+{
+  "topicTitle": "Chosen from the restricted list",
+  "difficulty": "${difficulty}",
+  "questionText": "Question string",
+  "codeSnippet": "code_string_or_null",
+  "options": ["A", "B", "C", "D"],
+  "correctOptionIndex": 0,
+  "explanation": "Brief explanation < 200 chars"
+}`;
   }
   async getRandomQuestion(): Promise<Question | undefined> {
     const prompt = this.getPrompt();

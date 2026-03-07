@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model } from "mongoose";
 import { Question } from "../schemas/question.schema";
+import { UpdateQuestionDto } from "./dto/update-question.dto";
 
 @Injectable()
 export class QuestionService {
@@ -14,7 +15,7 @@ export class QuestionService {
     return this.questionModel.find().exec();
   }
 
-  async findUniqueTopics() {
+  async findUniqueTopics(): Promise<string[]> {
     return this.questionModel.distinct("topicTitle").exec();
   }
 
@@ -32,12 +33,21 @@ export class QuestionService {
     return this.questionModel.hydrate(result[0]);
   }
 
-  async findOne(id: string): Promise<HydratedDocument<Question> | null> {
+  async findById(id: string): Promise<HydratedDocument<Question> | null> {
     return this.questionModel.findById(id).exec();
   }
 
   async findByText(text: string): Promise<HydratedDocument<Question> | null> {
     return this.questionModel.findOne({ text });
+  }
+
+  async updateOne(
+    id: string,
+    updateQuestionDto: UpdateQuestionDto,
+  ): Promise<HydratedDocument<Question> | null> {
+    return this.questionModel.findByIdAndUpdate(id, updateQuestionDto, {
+      new: true,
+    });
   }
 
   async createOne(question: Question): Promise<HydratedDocument<Question>> {
@@ -76,6 +86,7 @@ export class QuestionService {
     if (!correctAnswer) {
       throw new Error("error");
     }
+
     if (userOptionIndex !== correctOptIndex) {
       return {
         isCorrect: false,
