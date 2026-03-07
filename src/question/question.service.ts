@@ -34,15 +34,19 @@ export class QuestionService {
     ]);
   }
 
-  async findOneByTopic(
-    topic: string,
-  ): Promise<HydratedDocument<Question> | null> {
-    return this.questionModel.findOne({ topicTitle: topic }).exec();
-  }
-
   async findRandom(): Promise<HydratedDocument<Question> | null> {
     const result = await this.questionModel
       .aggregate([{ $sample: { size: 1 } }])
+      .exec();
+    if (result.length === 0) return null;
+    return this.questionModel.hydrate(result[0]);
+  }
+
+  async findRandomByTopic(
+    topic: string,
+  ): Promise<HydratedDocument<Question> | null> {
+    const result = await this.questionModel
+      .aggregate([{ $match: { topicTitle: topic } }, { $sample: { size: 1 } }])
       .exec();
     if (result.length === 0) return null;
     return this.questionModel.hydrate(result[0]);

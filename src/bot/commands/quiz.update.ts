@@ -114,8 +114,10 @@ export class QuizCommand {
           "Service failed to retrieve question topics",
         );
       }
-
-      const keyboardData = topics.map((topic) => ({
+      const descSortedTopics = topics.sort(
+        (a, b) => b.totalByTopic - a.totalByTopic,
+      );
+      const keyboardData = descSortedTopics.map((topic) => ({
         buttonText: `${topic._id} [${topic.totalByTopic}]`,
         callbackData: `selectedTopic:${topic._id}`,
       }));
@@ -285,7 +287,7 @@ export class QuizCommand {
 
     await ctx.editMessageText(`You picked: ${topicName}`);
 
-    const question = await this.questionService.findOneByTopic(topicName);
+    const question = await this.questionService.findRandomByTopic(topicName);
 
     if (!question) {
       throw new ServiceUnavailableException(
