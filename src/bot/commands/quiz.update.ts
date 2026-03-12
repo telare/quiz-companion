@@ -1,17 +1,17 @@
-import {
-  ServiceUnavailableException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { ServiceUnavailableException, UseGuards } from "@nestjs/common";
 import { Action, Command, Ctx, Update } from "nestjs-telegraf";
 import { AiService } from "../../ai/ai.service";
 import { QuestionService } from "../../question/question.service";
 import { UserService } from "../../users/user.service";
-import { Context, Markup } from "telegraf";
+import { Markup } from "telegraf";
 import { BotService } from "../bot.service";
 import { HydratedDocument } from "mongoose";
 import { Question } from "../../schemas/question.schema";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
 import { getErrorMessage } from "src/utils";
+import { AuthGuard } from "src/auth.guard";
+import { BotContext } from "src/bot.context";
+@UseGuards(AuthGuard)
 @Update()
 export class QuizCommand {
   constructor(
@@ -55,7 +55,7 @@ export class QuizCommand {
   }
 
   @Command("airandom")
-  async aiRandomCommand(@Ctx() ctx: Context) {
+  async aiRandomCommand(@Ctx() ctx: BotContext) {
     try {
       const questionData = await this.aiService.getRandomQuestion();
       if (!questionData) {
@@ -85,7 +85,7 @@ export class QuizCommand {
   }
 
   @Command("random")
-  async randomCommand(@Ctx() ctx: Context) {
+  async randomCommand(@Ctx() ctx: BotContext) {
     try {
       const questionData = await this.questionService.findRandom();
 
@@ -105,7 +105,7 @@ export class QuizCommand {
   }
 
   @Command("randombytopic")
-  async randomByTopicCommand(@Ctx() ctx: Context) {
+  async randomByTopicCommand(@Ctx() ctx: BotContext) {
     try {
       const topics = await this.questionService.countQuestionsByTopic();
 
@@ -131,16 +131,9 @@ export class QuizCommand {
   }
 
   @Command("saved")
-  async handleSavedQuestions(@Ctx() ctx: Context) {
+  async handleSavedQuestions(@Ctx() ctx: BotContext) {
     try {
-      const userName = ctx.from?.username;
-      if (!userName) {
-        throw new UnauthorizedException("Please sign in.");
-      }
-      const user = await this.userService.findByName(userName);
-      if (!user) {
-        throw new UnauthorizedException("Please sign in.");
-      }
+      const user = ctx.dbUser;
       const userId = user._id.toString();
       const saved = await this.favoriteService.findAll(userId);
 
@@ -184,7 +177,7 @@ export class QuizCommand {
   }
 
   @Action(/^quiz:/)
-  async handleRandomQuestionAnswer(@Ctx() ctx: Context) {
+  async handleRandomQuestionAnswer(@Ctx() ctx: BotContext) {
     try {
       await ctx.answerCbQuery();
       const cbQuery = ctx.callbackQuery;
@@ -203,24 +196,16 @@ export class QuizCommand {
         parseInt(choice),
       );
 
-      const userName = ctx.from?.username;
-      if (!userName) {
-        throw new UnauthorizedException("Please sign in.");
-      }
-
-      const userInfo = await this.userService.findByName(userName);
-      if (!userInfo) {
-        throw new UnauthorizedException("Please sign in.");
-      }
-      const userId = userInfo._id.toString();
+      const user = ctx.dbUser;
+      const userId = user._id.toString();
       const isAlreadySaved = await this.favoriteService.findOne({
         userId,
         questionId,
       });
       if (result.isCorrect) {
-        await this.userService.incrementPoints(userName, 1);
+        await this.userService.incrementPoints(user.username, 1);
       } else {
-        await this.userService.decrementPoints(userName, 1);
+        await this.userService.decrementPoints(user.username, 1);
       }
 
       const header = `<b>Topic:</b> ${question.topicTitle}\n<b>Difficulty:</b> ${question.difficulty}\n\n`;
@@ -268,7 +253,7 @@ export class QuizCommand {
   }
 
   @Action("next")
-  async handleNextQuestion(@Ctx() ctx: Context) {
+  async handleNextQuestion(@Ctx() ctx: BotContext) {
     try {
       await ctx.answerCbQuery();
       const cbQuery = ctx.callbackQuery;
@@ -291,7 +276,7 @@ export class QuizCommand {
   }
 
   @Action(/selectedTopic:(.+)/)
-  async onTopicPick(@Ctx() ctx: Context) {
+  async onTopicPick(@Ctx() ctx: BotContext) {
     const cbQuery = ctx.callbackQuery;
 
     if (!cbQuery || !("data" in cbQuery)) {
@@ -317,7 +302,7 @@ export class QuizCommand {
   }
 
   @Action(/^save:/)
-  async handleSaveQuestion(@Ctx() ctx: Context) {
+  async handleSaveQuestion(@Ctx() ctx: BotContext) {
     try {
       await ctx.answerCbQuery();
       const cbQuery = ctx.callbackQuery;
@@ -327,14 +312,7 @@ export class QuizCommand {
       }
 
       const [, questionId] = cbQuery.data.split(":");
-      const userName = ctx.from?.username;
-      if (!userName) {
-        throw new UnauthorizedException("Please sign in.");
-      }
-      const user = await this.userService.findByName(userName);
-      if (!user) {
-        throw new UnauthorizedException("Please sign in.");
-      }
+      const user = ctx.dbUser;
       const userId = user._id.toString();
       const existing = await this.favoriteService.findOne({
         userId,
@@ -381,7 +359,7 @@ export class QuizCommand {
   }
 
   @Action(/^unsave:/)
-  async handleUnSaveQuestion(@Ctx() ctx: Context) {
+  async handleUnSaveQuestion(@Ctx() ctx: BotContext) {
     try {
       await ctx.answerCbQuery();
       const cbQuery = ctx.callbackQuery;
@@ -391,14 +369,7 @@ export class QuizCommand {
       }
 
       const [, questionId] = cbQuery.data.split(":");
-      const userName = ctx.from?.username;
-      if (!userName) {
-        throw new UnauthorizedException("Please sign in.");
-      }
-      const user = await this.userService.findByName(userName);
-      if (!user) {
-        throw new UnauthorizedException("Please sign in.");
-      }
+      const user = ctx.dbUser;
       const userId = user._id.toString();
       const favorite = await this.favoriteService.findOne({
         userId,
