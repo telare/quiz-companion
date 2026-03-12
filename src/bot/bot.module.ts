@@ -8,10 +8,10 @@ import { StartCommand } from "./commands/start.update";
 import { HelpCommand } from "./commands/help.update";
 import { QuizCommand } from "./commands/quiz.update";
 import { UserCommand } from "./commands/user.update";
-import { getEnvValue } from "../utils/utils";
 import { BotService } from "./bot.service";
 import { BotController } from "./bot.controller";
 import { FavoriteQuestionModule } from "src/favorite-question/favorite-question.module";
+import { getEnvValue } from "src/utils";
 
 @Module({
   imports: [

@@ -5,9 +5,9 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AiModule } from "./ai/ai.module";
 import { UsersModule } from "./users/user.module";
 import { QuestionModule } from "./question/question.module";
-import { getEnvValue } from "./utils/utils";
 import { LoggerMiddleware } from "./logger.middleware";
 import { FavoriteQuestionModule } from "./favorite-question/favorite-question.module";
+import { getEnvValue } from "./utils";
 
 @Module({
   imports: [

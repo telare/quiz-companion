@@ -6,12 +6,12 @@ import { Action, Command, Ctx, Update } from "nestjs-telegraf";
 import { AiService } from "../../ai/ai.service";
 import { QuestionService } from "../../question/question.service";
 import { UserService } from "../../users/user.service";
-import { getErrorMessage } from "../../utils/errorMessage";
 import { Context, Markup } from "telegraf";
 import { BotService } from "../bot.service";
 import { HydratedDocument } from "mongoose";
 import { Question } from "../../schemas/question.schema";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
+import { getErrorMessage } from "src/utils";
 @Update()
 export class QuizCommand {
   constructor(
@@ -193,12 +193,13 @@ export class QuizCommand {
         return;
       }
 
-      const [, id, choice] = cbQuery.data.split(":");
+      const [, questionId, choice] = cbQuery.data.split(":");
 
-      const question = await this.questionService.findById(id);
+      const question = await this.questionService.findById(questionId);
       if (!question) return;
+
       const result = await this.questionService.checkQuestion(
-        id,
+        questionId,
         parseInt(choice),
       );
 
@@ -207,6 +208,15 @@ export class QuizCommand {
         throw new UnauthorizedException("Please sign in.");
       }
 
+      const userInfo = await this.userService.findByName(userName);
+      if (!userInfo) {
+        throw new UnauthorizedException("Please sign in.");
+      }
+      const userId = userInfo._id.toString();
+      const isAlreadySaved = await this.favoriteService.findOne({
+        userId,
+        questionId,
+      });
       if (result.isCorrect) {
         await this.userService.incrementPoints(userName, 1);
       } else {
@@ -231,16 +241,21 @@ export class QuizCommand {
         `\n<b>Explanation:</b>`,
         `<i>${result.explanation}</i>`,
       ].join("\n");
+
       const saveQuestionButton = {
         buttonText: "⭐ Save question",
         callbackData: `save:${question._id.toString()}`,
+      };
+      const unSaveButton = {
+        buttonText: "🗑 Remove from saved",
+        callbackData: `unsave:${question._id.toString()}`,
       };
       const nextQuestionButton = {
         buttonText: "⏭ Next",
         callbackData: "next",
       };
       const keyboard = this.botService.createInlineKeyboard([
-        saveQuestionButton,
+        isAlreadySaved ? unSaveButton : saveQuestionButton,
         nextQuestionButton,
       ]);
       await ctx.editMessageText(header + body + code + feedback, {
