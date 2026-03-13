@@ -21,9 +21,9 @@ export class UserService {
     return this.userModel.findOne({ username: name });
   }
 
-  async create(user: User) {
+  async create(user: User): Promise<HydratedDocument<User> | null> {
     const newUser = new this.userModel(user);
-    await newUser.save();
+    return await newUser.save();
   }
 
   async incrementPoints(userName: string, amount: number) {

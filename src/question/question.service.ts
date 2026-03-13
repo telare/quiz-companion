@@ -3,14 +3,54 @@ import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model } from "mongoose";
 import { Question } from "../schemas/question.schema";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
+import { BotService } from "../bot/bot.service";
+import { FavoriteQuestionService } from "../favorite-question/favorite-question.service";
 
 @Injectable()
 export class QuestionService {
   private readonly logger = new Logger(QuestionService.name);
   constructor(
     @InjectModel(Question.name) private readonly questionModel: Model<Question>,
+    private readonly botService: BotService,
+    private readonly favoriteService: FavoriteQuestionService,
   ) {}
+  async buildQuestion(
+    userId: string,
+    questionData: HydratedDocument<Question>,
+  ) {
+    const questionId = questionData._id.toString();
+    const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;
+    const body = `${questionData.questionText}\n`;
 
+    const code = questionData.codeSnippet
+      ? `\n<pre><code class="language-javascript">${questionData.codeSnippet}</code></pre>\n`
+      : "";
+
+    const fullMessage = `${header}${body}${code}`;
+    const callbackData = `quiz:${questionId}:`;
+
+    const keyboardData = questionData.options.map((opt, i) => ({
+      buttonText: opt,
+      callbackData: callbackData + i,
+    }));
+    const isAlreadySaved = await this.favoriteService.findOne({
+      userId,
+      questionId,
+    });
+    const saveQuestionButton = {
+      buttonText: "⭐ Save question",
+      callbackData: `save:${questionId}`,
+    };
+    const unSaveButton = {
+      buttonText: "🗑 Remove from saved",
+      callbackData: `unsave:${questionId}`,
+    };
+    const keyboard = this.botService.createInlineKeyboard([
+      ...keyboardData,
+      isAlreadySaved ? unSaveButton : saveQuestionButton,
+    ]);
+    return { fullMessage, keyboard };
+  }
   async findAll(): Promise<HydratedDocument<Question>[]> {
     return this.questionModel.find().exec();
   }
@@ -18,7 +58,28 @@ export class QuestionService {
   async findUniqueTopics(): Promise<string[]> {
     return this.questionModel.distinct("topicTitle").exec();
   }
-
+  async findOneCustomized(
+    topicTitle: Question["topicTitle"],
+    difficulty: Question["difficulty"],
+  ): Promise<HydratedDocument<Question> | null> {
+    return this.questionModel
+      .findOne({
+        topicTitle,
+        difficulty,
+      })
+      .exec();
+  }
+  async findManyCustomized(
+    topicTitle: Question["topicTitle"],
+    difficulty: Question["difficulty"],
+  ): Promise<HydratedDocument<Question>[]> {
+    return this.questionModel
+      .find({
+        topicTitle,
+        difficulty,
+      })
+      .exec();
+  }
   async countQuestionsByTopic(): Promise<
     { _id: string; totalByTopic: number }[]
   > {

@@ -12,9 +12,6 @@ import { getEnvValue } from "./utils";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    BotModule,
-    AiModule,
-    UsersModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -23,8 +20,11 @@ import { getEnvValue } from "./utils";
         return { uri };
       },
     }),
+    AiModule,
+    UsersModule,
     QuestionModule,
     FavoriteQuestionModule,
+    BotModule,
   ],
 })
 export class AppModule implements NestModule {

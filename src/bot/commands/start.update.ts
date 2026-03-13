@@ -1,12 +1,13 @@
 import { Ctx, Start, Update } from "nestjs-telegraf";
 import { UserService } from "../../users/user.service";
-import { Context } from "telegraf";
+import { Scenes } from "telegraf";
+import { WIZARD_KEYS } from "../../utils";
 
 @Update()
 export class StartCommand {
   constructor(private readonly userService: UserService) {}
   @Start()
-  async startCommand(@Ctx() ctx: Context) {
+  async startCommand(@Ctx() ctx: Scenes.SceneContext) {
     const userInfo = ctx.from;
     const username = userInfo?.username;
 
@@ -22,5 +23,6 @@ export class StartCommand {
     }
 
     await ctx.reply(`Hi @${username}! It is the bot for your tests!`);
+    await ctx.scene.enter(WIZARD_KEYS.quiz);
   }
 }

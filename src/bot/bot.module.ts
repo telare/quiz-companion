@@ -10,9 +10,12 @@ import { QuizCommand } from "./commands/quiz.update";
 import { UserCommand } from "./commands/user.update";
 import { BotService } from "./bot.service";
 import { BotController } from "./bot.controller";
-import { FavoriteQuestionModule } from "src/favorite-question/favorite-question.module";
-import { getEnvValue } from "src/utils";
-
+import { FavoriteQuestionModule } from "../favorite-question/favorite-question.module";
+import { getEnvValue } from "../utils";
+import { session } from "telegraf-session-mongodb";
+import { QuizWizard } from "../scenes/quiz/quiz.wizard";
+import { Connection, ConnectionStates } from "mongoose";
+import { getConnectionToken } from "@nestjs/mongoose";
 @Module({
   imports: [
     UsersModule,
@@ -20,15 +23,39 @@ import { getEnvValue } from "src/utils";
     FavoriteQuestionModule,
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
+      inject: [ConfigService, getConnectionToken()],
+      useFactory: async (
+        configService: ConfigService,
+        connection: Connection,
+      ) => {
+        if (connection.readyState !== ConnectionStates.connected) {
+          await new Promise((resolve, reject) => {
+            connection.once("connected", resolve);
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+            connection.once("error", (err) => reject(err));
+          }).catch((error) =>
+            console.error(
+              "Error in bot module's telegraf module factory",
+              error,
+            ),
+          );
+        }
         const secret = getEnvValue(configService, "tgBot");
         const isProd = getEnvValue(configService, "nodeEnv") === "production";
         const domain = getEnvValue(configService, "vercelDomain");
         const hookPath = getEnvValue(configService, "telegramWebhookPath");
 
+        // Use the native Db object from Mongoose connection
+        const db = connection.db;
+
         return {
           token: secret,
+          middlewares: [
+            session(db, {
+              sessionName: "session",
+              collectionName: "sessions",
+            }),
+          ],
           launchOptions: isProd
             ? {
                 webhook: {
@@ -42,7 +69,14 @@ import { getEnvValue } from "src/utils";
     }),
     AiModule,
   ],
-  providers: [StartCommand, BotService, HelpCommand, QuizCommand, UserCommand],
+  providers: [
+    StartCommand,
+    QuizWizard,
+    BotService,
+    HelpCommand,
+    QuizCommand,
+    UserCommand,
+  ],
   controllers: [BotController],
 })
 export class BotModule {}

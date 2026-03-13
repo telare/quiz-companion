@@ -7,3 +7,7 @@ export const ENV_KEYS = {
   telegramWebhookPath: "TELEGRAM_WEBHOOK_PATH",
 };
 export type EvnKey = keyof typeof ENV_KEYS;
+
+export const WIZARD_KEYS = {
+  quiz: "QUIZ_WIZARD",
+};

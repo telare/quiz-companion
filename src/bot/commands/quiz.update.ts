@@ -1,134 +1,22 @@
-import { ServiceUnavailableException, UseGuards } from "@nestjs/common";
+import { UseGuards } from "@nestjs/common";
 import { Action, Command, Ctx, Update } from "nestjs-telegraf";
-import { AiService } from "../../ai/ai.service";
 import { QuestionService } from "../../question/question.service";
 import { UserService } from "../../users/user.service";
 import { Markup } from "telegraf";
 import { BotService } from "../bot.service";
-import { HydratedDocument } from "mongoose";
-import { Question } from "../../schemas/question.schema";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
-import { getErrorMessage } from "src/utils";
-import { AuthGuard } from "src/auth.guard";
-import { BotContext } from "src/bot.context";
+import { getErrorMessage } from "../../utils";
+import { AuthGuard } from "../../auth.guard";
+import { BotContext } from "../../bot.context";
 @UseGuards(AuthGuard)
 @Update()
 export class QuizCommand {
   constructor(
-    private readonly aiService: AiService,
     private readonly questionService: QuestionService,
     private readonly userService: UserService,
     private readonly botService: BotService,
     private readonly favoriteService: FavoriteQuestionService,
   ) {}
-
-  private buildQuestion(questionData: HydratedDocument<Question>) {
-    const questionId = questionData._id.toString();
-    const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;
-    const body = `${questionData.questionText}\n`;
-
-    const code = questionData.codeSnippet
-      ? `\n<pre><code class="language-javascript">${questionData.codeSnippet}</code></pre>\n`
-      : "";
-
-    const fullMessage = `${header}${body}${code}`;
-    const callbackData = `quiz:${questionId}:`;
-
-    const keyboardData = questionData.options.map((opt, i) => ({
-      buttonText: opt,
-      callbackData: callbackData + i,
-    }));
-    const saveQuestionButton = {
-      buttonText: "⭐ Save question",
-      callbackData: `save:${questionId}`,
-    };
-    const nextQuestionButton = {
-      buttonText: "⏭ Next",
-      callbackData: `next`,
-    };
-    const keyboard = this.botService.createInlineKeyboard([
-      ...keyboardData,
-      saveQuestionButton,
-      nextQuestionButton,
-    ]);
-    return { fullMessage, keyboard };
-  }
-
-  @Command("airandom")
-  async aiRandomCommand(@Ctx() ctx: BotContext) {
-    try {
-      const questionData = await this.aiService.getRandomQuestion();
-      if (!questionData) {
-        throw new ServiceUnavailableException(
-          "The AI service is currently unable to generate a question.",
-        );
-      }
-
-      const savedQuestion = await this.questionService.createOne({
-        codeSnippet: questionData.codeSnippet,
-        correctOptionIndex: questionData.correctOptionIndex,
-        difficulty: questionData.difficulty,
-        explanation: questionData.explanation,
-        options: questionData.options,
-        questionText: questionData.questionText,
-        topicTitle: questionData.topicTitle,
-      });
-
-      const { fullMessage, keyboard } = this.buildQuestion(savedQuestion);
-      await ctx.reply(fullMessage, {
-        parse_mode: "HTML",
-        ...keyboard,
-      });
-    } catch (error: unknown) {
-      await ctx.reply(getErrorMessage(error));
-    }
-  }
-
-  @Command("random")
-  async randomCommand(@Ctx() ctx: BotContext) {
-    try {
-      const questionData = await this.questionService.findRandom();
-
-      if (!questionData) {
-        throw new ServiceUnavailableException(
-          "Service failed to generate a question",
-        );
-      }
-      const { fullMessage, keyboard } = this.buildQuestion(questionData);
-      await ctx.reply(fullMessage, {
-        parse_mode: "HTML",
-        ...keyboard,
-      });
-    } catch (error: unknown) {
-      await ctx.reply(getErrorMessage(error));
-    }
-  }
-
-  @Command("randombytopic")
-  async randomByTopicCommand(@Ctx() ctx: BotContext) {
-    try {
-      const topics = await this.questionService.countQuestionsByTopic();
-
-      if (!topics) {
-        throw new ServiceUnavailableException(
-          "Service failed to retrieve question topics",
-        );
-      }
-      const descSortedTopics = topics.sort(
-        (a, b) => b.totalByTopic - a.totalByTopic,
-      );
-      const keyboardData = descSortedTopics.map((topic) => ({
-        buttonText: `${topic._id} [${topic.totalByTopic}]`,
-        callbackData: `selectedTopic:${topic._id}`,
-      }));
-      const keyboard = this.botService.createInlineKeyboard(keyboardData);
-      await ctx.reply("Pick any topic from the list below:", {
-        ...keyboard,
-      });
-    } catch (error: unknown) {
-      await ctx.reply(getErrorMessage(error));
-    }
-  }
 
   @Command("saved")
   async handleSavedQuestions(@Ctx() ctx: BotContext) {
@@ -152,7 +40,8 @@ export class QuizCommand {
         if (!q) {
           continue;
         }
-        const { fullMessage: questionMessage } = this.buildQuestion(q);
+        const { fullMessage: questionMessage } =
+          await this.questionService.buildQuestion(userId, q);
         const optionLabels = ["A", "B", "C", "D"];
         const optionsText = q.options
           .map((opt, i) => `${optionLabels[i]}) ${opt}`)
@@ -198,107 +87,25 @@ export class QuizCommand {
 
       const user = ctx.dbUser;
       const userId = user._id.toString();
-      const isAlreadySaved = await this.favoriteService.findOne({
-        userId,
-        questionId,
-      });
       if (result.isCorrect) {
         await this.userService.incrementPoints(user.username, 1);
       } else {
         await this.userService.decrementPoints(user.username, 1);
       }
 
-      const header = `<b>Topic:</b> ${question.topicTitle}\n<b>Difficulty:</b> ${question.difficulty}\n\n`;
-      const body = `${question.questionText}\n`;
-      const code = question.codeSnippet
-        ? `\n<pre><code class="language-javascript">${question.codeSnippet}</code></pre>\n`
-        : "";
-
-      const statusEmoji = result.isCorrect ? "✅" : "❌";
-      const statusText = result.isCorrect
-        ? `<b>Correct!</b> You've gained 1 point.`
-        : `<b>Incorrect.</b> You've lost 1 point.`;
-
-      const feedback = [
-        `\n— — — — — — — — — — — —`,
-        `${statusEmoji} ${statusText}`,
-        `<b>Correct answer:</b> <code>${result.correctAnswer}</code>`,
-        `\n<b>Explanation:</b>`,
-        `<i>${result.explanation}</i>`,
-      ].join("\n");
-
-      const saveQuestionButton = {
-        buttonText: "⭐ Save question",
-        callbackData: `save:${question._id.toString()}`,
-      };
-      const unSaveButton = {
-        buttonText: "🗑 Remove from saved",
-        callbackData: `unsave:${question._id.toString()}`,
-      };
       const nextQuestionButton = {
         buttonText: "⏭ Next",
         callbackData: "next",
       };
-      const keyboard = this.botService.createInlineKeyboard([
-        isAlreadySaved ? unSaveButton : saveQuestionButton,
-        nextQuestionButton,
-      ]);
-      await ctx.editMessageText(header + body + code + feedback, {
-        parse_mode: "HTML",
-        ...keyboard,
-      });
-    } catch (error: unknown) {
-      await ctx.reply(getErrorMessage(error));
-    }
-  }
-
-  @Action("next")
-  async handleNextQuestion(@Ctx() ctx: BotContext) {
-    try {
-      await ctx.answerCbQuery();
-      const cbQuery = ctx.callbackQuery;
-
-      if (!cbQuery || !("data" in cbQuery)) return;
-
-      const questionData = await this.questionService.findRandom();
-      if (!questionData) {
-        throw new ServiceUnavailableException("Failed to get next question");
-      }
-
-      const { fullMessage, keyboard } = this.buildQuestion(questionData);
+      const { fullMessage, keyboard } =
+        await this.questionService.buildQuestion(userId, question);
       await ctx.editMessageText(fullMessage, {
         parse_mode: "HTML",
-        ...keyboard,
+        ...[keyboard, nextQuestionButton],
       });
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
-  }
-
-  @Action(/selectedTopic:(.+)/)
-  async onTopicPick(@Ctx() ctx: BotContext) {
-    const cbQuery = ctx.callbackQuery;
-
-    if (!cbQuery || !("data" in cbQuery)) {
-      return;
-    }
-
-    const [, topicName] = cbQuery.data.split(":");
-
-    await ctx.editMessageText(`You picked: ${topicName}`);
-
-    const question = await this.questionService.findRandomByTopic(topicName);
-
-    if (!question) {
-      throw new ServiceUnavailableException(
-        "Service failed to generate a question",
-      );
-    }
-    const { fullMessage, keyboard } = this.buildQuestion(question);
-    await ctx.reply(fullMessage, {
-      parse_mode: "HTML",
-      ...keyboard,
-    });
   }
 
   @Action(/^save:/)

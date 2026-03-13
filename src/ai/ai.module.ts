@@ -3,7 +3,7 @@ import { AiService } from "./ai.service";
 import { HttpModule } from "@nestjs/axios";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
-import { getEnvValue } from "src/utils";
+import { getEnvValue } from "../utils";
 
 @Module({
   imports: [HttpModule],
