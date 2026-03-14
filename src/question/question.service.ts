@@ -26,11 +26,16 @@ export class QuestionService {
       ? `\n<pre><code class="language-javascript">${questionData.codeSnippet}</code></pre>\n`
       : "";
 
-    const fullMessage = `${header}${body}${code}`;
+    const optionLabels = ["A", "B", "C", "D"];
+    const optionsText = questionData.options
+      .map((opt, i) => `<b>${optionLabels[i]})</b> ${opt}`)
+      .join("\n");
+
+    const fullMessage = `${header}${body}${code}\n${optionsText}`;
     const callbackData = `quiz:${questionId}:`;
 
-    const keyboardData = questionData.options.map((opt, i) => ({
-      buttonText: opt,
+    const keyboardData = questionData.options.map((_, i) => ({
+      buttonText: optionLabels[i],
       callbackData: callbackData + i,
     }));
     const isAlreadySaved = await this.favoriteService.findOne({

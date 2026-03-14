@@ -47,10 +47,6 @@ export class QuizCommand {
         const { fullMessage: questionMessage } =
           await this.questionService.buildQuestion(userId, q);
         const optionLabels = ["A", "B", "C", "D"];
-        const optionsText = q.options
-          .map((opt, i) => `${optionLabels[i]}) ${opt}`)
-          .join("\n");
-
         const footer = [
           "",
           `💡 <b>Correct Answer:</b> <span class="tg-spoiler">${optionLabels[q.correctOptionIndex]}) ${q.options[q.correctOptionIndex]}</span>`,
@@ -62,9 +58,7 @@ export class QuizCommand {
           );
         }
 
-        const fullMessage = [questionMessage, optionsText, ...footer].join(
-          "\n",
-        );
+        const fullMessage = [questionMessage, ...footer].join("\n");
         const keyboard = Markup.inlineKeyboard([
           [
             {
