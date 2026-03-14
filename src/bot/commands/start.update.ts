@@ -22,7 +22,18 @@ export class StartCommand {
     }
 
     await ctx.reply(
-      `Hi @${username}! It is the bot for your tests! To run send /quiz`,
+      [
+        `👋 <b>Welcome, @${username}!</b>`,
+        "",
+        "I'm your <b>Quiz Master Bot</b>. I can help you test your knowledge on various programming topics.",
+        "",
+        "🚀 To begin a quiz, use the /quiz command.",
+        "📊 To see your profile, use /my.",
+        "💡 For a list of all commands, use /help.",
+        "",
+        "Let's start learning!",
+      ].join("\n"),
+      { parse_mode: "HTML" },
     );
   }
 }

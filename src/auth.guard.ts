@@ -11,13 +11,15 @@ export class AuthGuard implements CanActivate {
     const ctx = telegrafHost.getContext<BotContext>();
     const userName = ctx.from?.username;
     if (!userName) {
-      await ctx.reply("Please sign in.");
+      await ctx.reply(
+        "Please set a username in your Telegram settings to use this bot.",
+      );
       return false;
     }
 
     const userInfo = await this.userService.findByName(userName);
     if (!userInfo) {
-      await ctx.reply("Please sign in.");
+      await ctx.reply("Please initialize the bot by sending /start first.");
       return false;
     }
     ctx.dbUser = userInfo;

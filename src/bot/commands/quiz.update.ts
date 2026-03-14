@@ -32,9 +32,12 @@ export class QuizCommand {
         );
         return;
       }
-      await ctx.reply(`📚 *Your saved questions* — ${saved.length} total`, {
-        parse_mode: "Markdown",
-      });
+      await ctx.reply(
+        `📚 <b>Your Saved Questions</b> (${saved.length} total):`,
+        {
+          parse_mode: "HTML",
+        },
+      );
       for (const s of saved) {
         const q = await this.questionService.findById(s.questionId);
 
@@ -47,7 +50,21 @@ export class QuizCommand {
         const optionsText = q.options
           .map((opt, i) => `${optionLabels[i]}) ${opt}`)
           .join("\n");
-        const fullMessage = [questionMessage, optionsText].join("\n");
+
+        const footer = [
+          "",
+          `💡 <b>Correct Answer:</b> <span class="tg-spoiler">${optionLabels[q.correctOptionIndex]}) ${q.options[q.correctOptionIndex]}</span>`,
+        ];
+
+        if (q.explanation) {
+          footer.push(
+            `📖 <b>Explanation:</b> <span class="tg-spoiler">${q.explanation}</span>`,
+          );
+        }
+
+        const fullMessage = [questionMessage, optionsText, ...footer].join(
+          "\n",
+        );
         const keyboard = Markup.inlineKeyboard([
           [
             {

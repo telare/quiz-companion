@@ -289,8 +289,8 @@ export class QuizWizard {
       const feedback = [
         `\n— — — — — — — — — — — —`,
         `${statusEmoji} ${statusText}`,
-        `<b>Correct answer:</b> <code>${result.correctAnswer}</code>`,
-        `\n<b>Explanation:</b>`,
+        `<b>💡 Correct answer:</b> <code>${result.correctAnswer}</code>`,
+        `\n<b>📖 Explanation:</b>`,
         `<i>${result.explanation}</i>`,
       ].join("\n");
       const isAlreadySaved = await this.favoriteService.findOne({
