@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model } from "mongoose";
-import { Question } from "../schemas/question.schema";
+import { Question, Category } from "../schemas/question.schema";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { BotService } from "../bot/bot.service";
 import { FavoriteQuestionService } from "../favorite-question/favorite-question.service";
@@ -71,19 +71,24 @@ export class QuestionService {
   }
   async findManyCustomized(
     topicTitle: Question["topicTitle"],
+    category: Question["category"],
     difficulty: Question["difficulty"],
+    limit: number,
   ): Promise<HydratedDocument<Question>[]> {
-    return this.questionModel
-      .find({
-        topicTitle,
-        difficulty,
-      })
-      .exec();
-  }
-  async countQuestionsByTopic(): Promise<
-    { _id: string; totalByTopic: number }[]
-  > {
     return this.questionModel.aggregate([
+      {
+        $match: { topicTitle, difficulty, category },
+      },
+      {
+        $sample: { size: limit },
+      },
+    ]);
+  }
+  async countQuestionsByTopic(
+    category: Question["category"],
+  ): Promise<{ _id: string; totalByTopic: number }[]> {
+    return this.questionModel.aggregate([
+      { $match: { category } },
       {
         $group: {
           _id: "$topicTitle",
@@ -92,6 +97,17 @@ export class QuestionService {
           },
         },
       },
+    ]);
+  }
+
+  async getCategories(): Promise<{ _id: string; category: Category }[]> {
+    return this.questionModel.aggregate([
+      {
+        $group: {
+          _id: "$category",
+        },
+      },
+      { $project: { category: "$_id", _id: 1 } },
     ]);
   }
 

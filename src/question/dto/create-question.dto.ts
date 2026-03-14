@@ -5,17 +5,26 @@ import {
   ArrayMinSize,
   IsNumber,
   ValidateIf,
+  IsEnum,
 } from "class-validator";
+import {
+  Difficulty,
+  Category,
+  TopicTitle,
+} from "../../schemas/question.schema";
 
 export class CreateQuestionDTO {
   @IsString()
   questionText: string;
 
-  @IsString()
-  topicTitle: string;
+  @IsEnum(TopicTitle)
+  topicTitle: TopicTitle;
 
-  @IsString()
-  difficulty: string;
+  @IsEnum(Difficulty)
+  difficulty: Difficulty;
+
+  @IsEnum(Category)
+  category: Category;
 
   @IsString()
   @ValidateIf((_, value) => value !== null)

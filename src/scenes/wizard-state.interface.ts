@@ -1,14 +1,15 @@
+import { Difficulty, TopicTitle, Category } from "../schemas/question.schema";
 import { Scenes } from "telegraf";
 
 export interface MyWizardState extends Scenes.WizardSessionData {
   userName?: string;
   userId?: string;
-  topic?: string;
-  difficulty?: string;
+  topic?: TopicTitle;
+  difficulty?: Difficulty;
+  category?: Category;
   quizLength?: number;
   questionIds?: string[];
   currentIndex?: number;
-  score?: number;
   runStatistic: {
     correct: number;
     incorrect: number;

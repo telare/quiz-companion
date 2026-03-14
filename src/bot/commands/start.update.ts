@@ -1,7 +1,6 @@
 import { Ctx, Start, Update } from "nestjs-telegraf";
 import { UserService } from "../../users/user.service";
 import { Scenes } from "telegraf";
-import { WIZARD_KEYS } from "../../utils";
 
 @Update()
 export class StartCommand {
@@ -22,7 +21,8 @@ export class StartCommand {
       await this.userService.create({ username });
     }
 
-    await ctx.reply(`Hi @${username}! It is the bot for your tests!`);
-    await ctx.scene.enter(WIZARD_KEYS.quiz);
+    await ctx.reply(
+      `Hi @${username}! It is the bot for your tests! To run send /quiz`,
+    );
   }
 }

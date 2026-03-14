@@ -9,7 +9,11 @@ import { Markup } from "telegraf";
 import { AuthGuard } from "../../auth.guard";
 import { MyWizardState } from "../wizard-state.interface";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
-import { Difficulty } from "../../schemas/question.schema";
+import {
+  Category,
+  Difficulty,
+  TopicTitle,
+} from "../../schemas/question.schema";
 
 /* 
 Core workflow logic:
@@ -68,20 +72,6 @@ export class QuizWizard {
   async onEnter(@Context() ctx: WizardSceenContext) {
     await ctx.reply("Welcome!");
     try {
-      const topics = await this.questionService.countQuestionsByTopic();
-
-      if (!topics) {
-        throw new ServiceUnavailableException(
-          "Service failed to retrieve question topics",
-        );
-      }
-      const descSortedTopics = topics.sort(
-        (a, b) => b.totalByTopic - a.totalByTopic,
-      );
-      const keyboardData = descSortedTopics.map((topic) => ({
-        buttonText: `${topic._id} [${topic.totalByTopic}]`,
-        callbackData: `selectedTopic:${topic._id}`,
-      }));
       const state = ctx.wizard.state as MyWizardState;
       const userName = ctx.from?.username;
       if (!userName) {
@@ -92,24 +82,68 @@ export class QuizWizard {
         throw new Error("Please sign in");
       }
       state.userId = userInDb._id.toString();
-      state.score = 0;
       state.userName = userName;
       state.runStatistic = {
         correct: 0,
         incorrect: 0,
       };
+      const categories = await this.questionService.getCategories();
 
+      if (!categories) {
+        throw new ServiceUnavailableException(
+          "Service failed to retrieve technologies",
+        );
+      }
+      const keyboardData = categories.map((cat) => ({
+        buttonText: `${cat.category}`,
+        callbackData: `category:${cat._id}`,
+      }));
       const keyboard = this.botService.createInlineKeyboard(keyboardData);
-      await ctx.reply("Pick any topic from the list below:", {
+      await ctx.reply("Pick any quiz category from suggested:", {
         ...keyboard,
       });
+      ctx.wizard.next();
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
-    ctx.wizard.next();
   }
 
   @WizardStep(2)
+  @Action(/category:(.+)/)
+  async onCategoryPick(@Ctx() ctx: WizardSceenContext) {
+    const cbQuery = ctx.callbackQuery;
+    if (!cbQuery || !("data" in cbQuery)) {
+      return;
+    }
+    const state = ctx.wizard.state as MyWizardState;
+
+    const [, category] = cbQuery.data.split(":");
+    state.category = category as Category;
+
+    const topics = await this.questionService.countQuestionsByTopic(
+      state.category,
+    );
+
+    if (!topics) {
+      throw new ServiceUnavailableException(
+        "Service failed to retrieve question topics",
+      );
+    }
+    const descSortedTopics = topics.sort(
+      (a, b) => b.totalByTopic - a.totalByTopic,
+    );
+    const keyboardData = descSortedTopics.map((topic) => ({
+      buttonText: `${topic._id} [${topic.totalByTopic}]`,
+      callbackData: `selectedTopic:${topic._id}`,
+    }));
+    const keyboard = this.botService.createInlineKeyboard(keyboardData);
+    await ctx.editMessageText("Pick any topic from the list below:", {
+      ...keyboard,
+    });
+    ctx.wizard.next();
+  }
+
+  @WizardStep(3)
   @Action(/selectedTopic:(.+)/)
   async onTopicPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
@@ -119,7 +153,7 @@ export class QuizWizard {
     const state = ctx.wizard.state as MyWizardState;
 
     const [, topicName] = cbQuery.data.split(":");
-    state.topic = topicName;
+    state.topic = topicName as TopicTitle;
 
     const difficultyLevelKeyboardData = Object.values(Difficulty).map(
       (difficulty) => ({
@@ -136,7 +170,7 @@ export class QuizWizard {
     ctx.wizard.next();
   }
 
-  @WizardStep(3)
+  @WizardStep(4)
   @Action(/difficulty:(.+)/)
   async onDifficultyPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
@@ -144,9 +178,10 @@ export class QuizWizard {
     if (!cbQuery || !("data" in cbQuery)) {
       return;
     }
+
     const state = ctx.wizard.state as MyWizardState;
     const [, difficulty] = cbQuery.data.split(":");
-    state.difficulty = difficulty;
+    state.difficulty = difficulty as Difficulty;
 
     const quizLengthKeyboardData = ["1", "5", "10"].map((qlength) => ({
       buttonText: qlength,
@@ -161,28 +196,50 @@ export class QuizWizard {
     ctx.wizard.next();
   }
 
-  @WizardStep(4)
+  @WizardStep(5)
   @Action(/quizLength:(.+)/)
   async onLengthPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
     if (!cbQuery || !("data" in cbQuery)) {
       return;
     }
+
+    // removes the loading spinner on the button
+    await ctx.answerCbQuery();
+
+    // removes the inline buttons
+    await ctx.editMessageReplyMarkup(undefined);
+
     const state = ctx.wizard.state as MyWizardState;
     const [, quizLength] = cbQuery.data.split(":");
     state.quizLength = Number(quizLength);
     const topic = state.topic;
     const difficulty = state.difficulty;
-    if (!topic || !difficulty) {
-      throw new Error("Missing topic or difficulty in the wizard's state");
+    const category = state.category;
+    if (!topic || !difficulty || !category) {
+      throw new Error(
+        "Missing topic | difficulty | category in the wizard's state",
+      );
     }
 
     const questionData = await this.questionService.findManyCustomized(
       topic,
+      category,
       difficulty,
+      state.quizLength,
     );
     if (!questionData || questionData.length === 0) {
-      throw new ServiceUnavailableException("Service failed to find questions");
+      await ctx.reply(
+        "No questions found for this topic/difficulty. Please try again.",
+      );
+      return ctx.scene.leave();
+    }
+
+    if (questionData.length < state.quizLength) {
+      state.quizLength = questionData.length;
+      await ctx.reply(
+        `⚠️ Only ${questionData.length} questions available. Adjusting quiz length.`,
+      );
     }
     state.questionIds = questionData.map((q) => q._id.toString());
     state.currentIndex = 0;
@@ -190,7 +247,7 @@ export class QuizWizard {
     ctx.wizard.next();
   }
 
-  @WizardStep(5)
+  @WizardStep(6)
   @Action(/^quiz:/)
   async onAnswer(@Ctx() ctx: WizardSceenContext) {
     try {
@@ -218,15 +275,9 @@ export class QuizWizard {
         throw new Error("Missing userId or runStatistic in the wizard's state");
       }
 
-      let userScore = state.score;
-      if (userScore === undefined) {
-        throw new Error("Missing userScore in the wizard's state");
-      }
       if (result.isCorrect) {
-        userScore += 1;
         runStatistic.correct++;
       } else {
-        userScore = userScore > 0 ? --userScore : 0;
         runStatistic.incorrect++;
       }
 
@@ -266,7 +317,6 @@ export class QuizWizard {
         parse_mode: "HTML",
         ...keyboard,
       });
-      state.score = userScore;
 
       let currentIndex = state.currentIndex;
       const quizLength = state.quizLength;
@@ -293,11 +343,10 @@ export class QuizWizard {
     }
   }
 
-  @WizardStep(6)
+  @WizardStep(7)
   async onResults(@Ctx() ctx: WizardSceenContext) {
     const state = ctx.wizard.state as MyWizardState;
     const {
-      score,
       runStatistic: { correct, incorrect },
       difficulty,
       topic,
@@ -323,22 +372,23 @@ export class QuizWizard {
       `📊 <b>Accuracy:</b> <code>${percentage}%</code>`,
       `— — — — — — — — — — — —\n`,
     ].join("\n");
-
+    const finalScrore = correct - incorrect;
     const footer = [
       `🏆 <b>Result:</b> ${rank}`,
-      `✨ <b>Points Gained:</b> <code>+${score}</code>`,
-      `✨ <b>Points Lost:</b> <code>-${incorrect}</code>`,
+      `✨ <b>Final score:</b> <code>${finalScrore > 0 ? "+" : ""}${finalScrore}</code>`,
       `\n<i>Type /quiz to start a new session!</i>`,
-    ].join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     const fullMessage = header + details + stats + footer;
 
     const userName = ctx.from?.username;
-    if (userName && score) {
-      await this.userService.incrementPoints(userName, score);
+    if (userName) {
+      await this.userService.incrementPoints(userName, finalScrore);
     }
 
-    const shareText = `I scored ${correct}/${quizLength} on the ${topic} interview quiz! 🚀`;
+    const shareText = `\n\n🎯 Just completed a ${topic} interview quiz!\n\n✅ Correct: ${correct}/${quizLength}\n📊 Accuracy: ${percentage}%\n🏆 Rank: ${rank}\n\n💻 Think you can beat my score? Try it yourself!`;
 
     const keyboard = Markup.inlineKeyboard([
       [Markup.button.switchToChat("Share my result ↗️", shareText)],

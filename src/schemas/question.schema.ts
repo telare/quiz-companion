@@ -5,7 +5,7 @@ export enum Difficulty {
   SERNIOR = "senior",
 }
 
-enum TopicTitle {
+export enum TopicTitle {
   CLOSURES = "Closures",
   PROMISES = "Promises",
   EVENT_LOOP = "Event loop",
@@ -34,6 +34,10 @@ enum TopicTitle {
   PERFORMANCE = "Performance",
   OTHER = "Other",
 }
+
+export enum Category {
+  JS = "javascript",
+}
 @Schema()
 export class Question {
   @Prop({ required: true, unique: true })
@@ -44,14 +48,21 @@ export class Question {
     enum: TopicTitle,
     default: TopicTitle.OTHER,
   })
-  topicTitle: string;
+  topicTitle: TopicTitle;
 
   @Prop({
     required: true,
     enum: Difficulty,
     default: Difficulty.MIDDLE,
   })
-  difficulty: string;
+  difficulty: Difficulty;
+
+  @Prop({
+    required: true,
+    enum: Category,
+    default: Category.JS,
+  })
+  category: Category;
 
   @Prop({
     type: String,

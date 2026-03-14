@@ -1,11 +1,9 @@
 import { UseGuards } from "@nestjs/common";
 import { Action, Command, Ctx, Update } from "nestjs-telegraf";
 import { QuestionService } from "../../question/question.service";
-import { UserService } from "../../users/user.service";
-import { Markup } from "telegraf";
-import { BotService } from "../bot.service";
+import { Markup, Scenes } from "telegraf";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
-import { getErrorMessage } from "../../utils";
+import { getErrorMessage, WIZARD_KEYS } from "../../utils";
 import { AuthGuard } from "../../auth.guard";
 import { BotContext } from "../../bot.context";
 @UseGuards(AuthGuard)
@@ -13,10 +11,13 @@ import { BotContext } from "../../bot.context";
 export class QuizCommand {
   constructor(
     private readonly questionService: QuestionService,
-    private readonly userService: UserService,
-    private readonly botService: BotService,
     private readonly favoriteService: FavoriteQuestionService,
   ) {}
+
+  @Command("quiz")
+  async handleStartQuiz(@Ctx() ctx: Scenes.SceneContext) {
+    await ctx.scene.enter(WIZARD_KEYS.quiz);
+  }
 
   @Command("saved")
   async handleSavedQuestions(@Ctx() ctx: BotContext) {
@@ -60,49 +61,6 @@ export class QuizCommand {
           ...keyboard,
         });
       }
-    } catch (error: unknown) {
-      await ctx.reply(getErrorMessage(error));
-    }
-  }
-
-  @Action(/^quiz:/)
-  async handleRandomQuestionAnswer(@Ctx() ctx: BotContext) {
-    try {
-      await ctx.answerCbQuery();
-      const cbQuery = ctx.callbackQuery;
-
-      if (!cbQuery || !("data" in cbQuery)) {
-        return;
-      }
-
-      const [, questionId, choice] = cbQuery.data.split(":");
-
-      const question = await this.questionService.findById(questionId);
-      if (!question) return;
-
-      const result = await this.questionService.checkQuestion(
-        questionId,
-        parseInt(choice),
-      );
-
-      const user = ctx.dbUser;
-      const userId = user._id.toString();
-      if (result.isCorrect) {
-        await this.userService.incrementPoints(user.username, 1);
-      } else {
-        await this.userService.decrementPoints(user.username, 1);
-      }
-
-      const nextQuestionButton = {
-        buttonText: "⏭ Next",
-        callbackData: "next",
-      };
-      const { fullMessage, keyboard } =
-        await this.questionService.buildQuestion(userId, question);
-      await ctx.editMessageText(fullMessage, {
-        parse_mode: "HTML",
-        ...[keyboard, nextQuestionButton],
-      });
     } catch (error: unknown) {
       await ctx.reply(getErrorMessage(error));
     }
