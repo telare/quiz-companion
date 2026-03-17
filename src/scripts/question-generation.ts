@@ -300,8 +300,7 @@ async function main() {
       });
     } catch (err: unknown) {
       if (err instanceof Error) {
-        console.warn(`❌ Validation failed for a question: ${err.message}`);
-        return;
+        console.warn(`❌ Skipping invalid question: ${err.message}`);
       }
       console.log("Unhanled js!", err);
     }
