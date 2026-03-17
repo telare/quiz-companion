@@ -111,7 +111,7 @@ const DOMAINS = {
 const DIFFICULTIES = ["junior", "middle", "senior"];
 
 const genAI = new GoogleGenerativeAI(process.env.AI_STUDIO || "");
-const AI_MODEL = "gemini-1.5-flash";
+const AI_MODEL = "gemini-2.5-flash";
 const RESPONSE_TYPE = "application/json";
 
 function getPromptTemplate(
