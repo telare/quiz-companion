@@ -16,7 +16,7 @@ jobs:
         run: npm install
 
       - name: Run script
-        working-directory: ./scripts
+        working-directory: ./src/scripts
         run: npx ts-node  question-generation.ts
         env:
           AI_STUDIO: ${{ secrets.AI_STUDIO }}
