@@ -7,13 +7,9 @@ import { BotService } from "../../bot/bot.service";
 import { UserService } from "../../users/user.service";
 import { Markup } from "telegraf";
 import { AuthGuard } from "../../auth.guard";
-import { MyWizardState } from "../wizard-state.interface";
+import { MyWizardState, TopicTitle } from "../wizard-state.interface";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
-import {
-  Category,
-  Difficulty,
-  TopicTitle,
-} from "../../schemas/question.schema";
+import { Category, Difficulty } from "../../schemas/question.schema";
 
 /* 
 Core workflow logic:

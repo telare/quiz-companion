@@ -10,15 +10,16 @@ import {
 import {
   Difficulty,
   Category,
-  TopicTitle,
+  JS_TopicTitle,
+  ENGLISH_TopicTitle,
 } from "../../schemas/question.schema";
 
 export class CreateQuestionDTO {
   @IsString()
   questionText: string;
 
-  @IsEnum(TopicTitle)
-  topicTitle: TopicTitle;
+  @IsEnum([JS_TopicTitle, ENGLISH_TopicTitle])
+  topicTitle: JS_TopicTitle | ENGLISH_TopicTitle;
 
   @IsEnum(Difficulty)
   difficulty: Difficulty;

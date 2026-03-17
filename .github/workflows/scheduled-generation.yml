@@ -1,0 +1,22 @@
+name: Scheduled AI Question Generation Workflow
+
+on:
+  schedule:
+    - cron: "0 8 * * 1,2"
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run script
+        run: npx ts-node  scripts/question-generation.ts
+        env:
+          AI_STUDIO: ${{ secrets.AI_STUDIO }}
+          QUIZ_API_ENDPOINT: ${{ secrets.QUIZ_API_ENDPOINT }}
