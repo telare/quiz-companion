@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateFavoriteQuestionDto } from "./dto/create-favorite-question.dto";
 import { InjectModel } from "@nestjs/mongoose";
-import { Favorite } from "../schemas/favorite.schema";
 import { DeleteResult, HydratedDocument, Model } from "mongoose";
+import { Favorite } from "src/schemas";
 
 @Injectable()
 export class FavoriteQuestionService {

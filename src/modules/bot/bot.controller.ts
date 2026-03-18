@@ -28,7 +28,7 @@ export class BotController {
 
       return res.status(200).send("OK");
     } catch (e) {
-      console.error("Error handling update:", e);
+      this.logger.error("Error handling update:", e);
     }
   }
 }

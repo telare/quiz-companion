@@ -6,10 +6,10 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model, MongooseError } from "mongoose";
-import { Question, Category } from "../schemas/question.schema";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
-import { BotService } from "../bot/bot.service";
 import { FavoriteQuestionService } from "../favorite-question/favorite-question.service";
+import { Category, Question } from "src/schemas";
+import { BotService } from "../bot/bot.service";
 
 @Injectable()
 export class QuestionService {

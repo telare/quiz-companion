@@ -1,15 +1,15 @@
 import { Wizard, WizardStep, Context, Action, Ctx } from "nestjs-telegraf";
 import type { WizardSceenContext } from "../wizard-scene.context";
-import { ServiceUnavailableException, UseGuards } from "@nestjs/common";
-import { getErrorMessage } from "../../utils";
-import { QuestionService } from "../../question/question.service";
-import { BotService } from "../../bot/bot.service";
-import { UserService } from "../../users/user.service";
+import { Logger, ServiceUnavailableException, UseGuards } from "@nestjs/common";
+import { getErrorMessage } from "../../common/utils";
+import { BotService } from "../../modules/bot/bot.service";
 import { Markup } from "telegraf";
-import { AuthGuard } from "../../auth.guard";
 import { MyWizardState, TopicTitle } from "../wizard-state.interface";
-import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
 import { Category, Difficulty } from "../../schemas/question.schema";
+import { AuthGuard } from "src/common/guards";
+import { QuestionService } from "src/modules/question/question.service";
+import { FavoriteQuestionService } from "src/modules/favorite-question/favorite-question.service";
+import { UserService } from "src/modules/users/user.service";
 
 /* 
 Core workflow logic:
@@ -27,6 +27,7 @@ export class QuizWizard {
     private readonly botService: BotService,
     private readonly favoriteService: FavoriteQuestionService,
     private readonly userService: UserService,
+    private readonly logger = new Logger(QuizWizard.name),
   ) {}
   private async logOneQuestion(@Ctx() ctx: WizardSceenContext) {
     const state = ctx.wizard.state as MyWizardState;
@@ -46,12 +47,12 @@ export class QuizWizard {
     state.current = current;
     const questionData = await this.questionService.findById(current);
     if (!questionData) {
-      console.error("missing question by id", current);
+      this.logger.error("missing question by id", current);
       return;
     }
     const userId = state.userId;
     if (!userId) {
-      console.error("missing userId in the wizard's state", userId);
+      this.logger.error("missing userId in the wizard's state", userId);
       return;
     }
     const { fullMessage, keyboard } = await this.questionService.buildQuestion(
@@ -326,7 +327,7 @@ export class QuizWizard {
         );
       }
       if (currentIndex < quizLength - 1) {
-        console.log(currentIndex, quizLength - 1);
+        this.logger.log(currentIndex, quizLength - 1);
         currentIndex = currentIndex + 1;
         state.currentIndex = currentIndex;
         return await this.logOneQuestion(ctx);

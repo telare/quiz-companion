@@ -11,9 +11,9 @@ import { UserCommand } from "./commands/user.update";
 import { BotService } from "./bot.service";
 import { BotController } from "./bot.controller";
 import { FavoriteQuestionModule } from "../favorite-question/favorite-question.module";
-import { getEnvValue } from "../utils";
+import { getEnvValue } from "../../common/utils";
 import { session } from "telegraf-session-mongodb";
-import { QuizWizard } from "../scenes/quiz/quiz.wizard";
+import { QuizWizard } from "../../scenes/quiz/quiz.wizard";
 import { Connection, ConnectionStates } from "mongoose";
 import { getConnectionToken } from "@nestjs/mongoose";
 @Module({

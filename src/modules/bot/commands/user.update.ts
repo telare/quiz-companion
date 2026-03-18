@@ -1,8 +1,8 @@
 import { Command, Ctx, Update } from "nestjs-telegraf";
 import { UserService } from "../../users/user.service";
-import { BotContext } from "../../bot.context";
+import { BotContext } from "../../../bot.context";
 import { UseGuards } from "@nestjs/common";
-import { AuthGuard } from "../../auth.guard";
+import { AuthGuard } from "src/common/guards";
 
 @UseGuards(AuthGuard)
 @Update()

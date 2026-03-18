@@ -3,9 +3,9 @@ import { Action, Command, Ctx, Update } from "nestjs-telegraf";
 import { QuestionService } from "../../question/question.service";
 import { Markup, Scenes } from "telegraf";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
-import { getErrorMessage, WIZARD_KEYS } from "../../utils";
-import { AuthGuard } from "../../auth.guard";
-import { BotContext } from "../../bot.context";
+import { getErrorMessage, WIZARD_KEYS } from "../../../common/utils";
+import { BotContext } from "../../../bot.context";
+import { AuthGuard } from "src/common/guards";
 @UseGuards(AuthGuard)
 @Update()
 export class QuizCommand {

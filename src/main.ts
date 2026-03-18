@@ -3,13 +3,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
+import { Logger, ValidationPipe } from "@nestjs/common";
 import { ExpressAdapter } from "@nestjs/platform-express";
 import express from "express";
-import { HttpExceptionFilter } from "./http-exception.filter";
-import { LoggingInterceptor } from "./logging.interceptor";
-import { TransformInterceptor } from "./transform.interceptor";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { HttpExceptionFilter } from "./common/filters";
+import {
+  LoggingInterceptor,
+  TransformInterceptor,
+} from "./common/interceptors";
 
 let cachedApp: any;
 const isProd = process.env.NODE_ENV === "production";
@@ -30,13 +32,13 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api/docs", app, document);
-
+  const logger = new Logger("[bootstrap]");
   if (isProd) {
     await app.init();
   } else {
     const port = process.env.PORT || 3000;
     await app.listen(port);
-    console.log(`Server is running on http://localhost:${port}`);
+    logger.log(`Server is running on http://localhost:${port}`);
   }
   return server;
 }

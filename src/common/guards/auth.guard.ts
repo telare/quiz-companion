@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { TelegrafExecutionContext } from "nestjs-telegraf";
-import { UserService } from "./users/user.service";
-import { BotContext } from "./bot.context";
+import { BotContext } from "src/bot.context";
+import { UserService } from "src/modules/users/user.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {

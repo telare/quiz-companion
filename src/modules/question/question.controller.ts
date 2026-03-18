@@ -9,9 +9,9 @@ import {
 } from "@nestjs/common";
 import { QuestionService } from "./question.service";
 import { CreateQuestionDTO } from "./dto/create-question.dto";
-import { Question } from "../schemas/question.schema";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Question } from "src/schemas";
 @ApiTags("questions")
 @Controller("questions")
 export class QuestionController {

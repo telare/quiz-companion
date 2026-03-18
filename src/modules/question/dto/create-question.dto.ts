@@ -8,11 +8,11 @@ import {
   IsEnum,
 } from "class-validator";
 import {
-  Difficulty,
   Category,
-  JS_TopicTitle,
+  Difficulty,
   ENGLISH_TopicTitle,
-} from "../../schemas/question.schema";
+  JS_TopicTitle,
+} from "src/schemas";
 
 export class CreateQuestionDTO {
   @IsString()
