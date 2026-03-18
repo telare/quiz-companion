@@ -75,7 +75,8 @@ export class Question {
 
   @Prop({
     required: true,
-    enum: JS_TopicTitle || ENGLISH_TopicTitle,
+    type: String,
+    enum: [...Object.values(JS_TopicTitle), ...Object.values(JS_TopicTitle)],
     default: JS_TopicTitle.OTHER,
   })
   topicTitle: JS_TopicTitle | ENGLISH_TopicTitle;

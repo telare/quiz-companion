@@ -1,6 +1,11 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { HydratedDocument, Model } from "mongoose";
+import { HydratedDocument, Model, MongooseError } from "mongoose";
 import { Question, Category } from "../schemas/question.schema";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { BotService } from "../bot/bot.service";
@@ -66,13 +71,18 @@ export class QuestionService {
   async findOneCustomized(
     topicTitle: Question["topicTitle"],
     difficulty: Question["difficulty"],
-  ): Promise<HydratedDocument<Question> | null> {
-    return this.questionModel
+  ): Promise<HydratedDocument<Question>> {
+    const q = await this.questionModel
       .findOne({
         topicTitle,
         difficulty,
       })
       .exec();
+    if (!q)
+      throw new NotFoundException(
+        `Question with topicTitle ${topicTitle}, difficulty ${difficulty} not found`,
+      );
+    return this.questionModel.hydrate(q);
   }
   async findManyCustomized(
     topicTitle: Question["topicTitle"],
@@ -116,46 +126,68 @@ export class QuestionService {
     ]);
   }
 
-  async findRandom(): Promise<HydratedDocument<Question> | null> {
+  async findRandom(): Promise<HydratedDocument<Question>> {
     const result = await this.questionModel
       .aggregate([{ $sample: { size: 1 } }])
       .exec();
-    if (result.length === 0) return null;
+    if (result.length === 0)
+      throw new NotFoundException(`Random question not found`);
     return this.questionModel.hydrate(result[0]);
   }
 
-  async findRandomByTopic(
-    topic: string,
-  ): Promise<HydratedDocument<Question> | null> {
+  async findRandomByTopic(topic: string): Promise<HydratedDocument<Question>> {
     const result = await this.questionModel
       .aggregate([{ $match: { topicTitle: topic } }, { $sample: { size: 1 } }])
       .exec();
-    if (result.length === 0) return null;
+    if (result.length === 0)
+      throw new NotFoundException(`Question with topic ${topic} not found`);
     return this.questionModel.hydrate(result[0]);
   }
 
-  async findById(id: string): Promise<HydratedDocument<Question> | null> {
-    return this.questionModel.findById(id).exec();
+  async findById(id: string): Promise<HydratedDocument<Question>> {
+    const q = await this.questionModel.findById(id).exec();
+    if (!q) {
+      throw new NotFoundException(`Question with id ${id} not found`);
+    }
+    return q;
   }
 
-  async findByText(text: string): Promise<HydratedDocument<Question> | null> {
-    return this.questionModel.findOne({ text });
+  async findByText(text: string): Promise<HydratedDocument<Question>> {
+    const q = await this.questionModel.findOne({ text });
+    if (!q) {
+      throw new NotFoundException(`Question with text ${text} not found`);
+    }
+    return q;
   }
 
   async updateOne(
     id: string,
     updateQuestionDto: UpdateQuestionDto,
-  ): Promise<HydratedDocument<Question> | null> {
-    return this.questionModel.findByIdAndUpdate(id, updateQuestionDto, {
-      new: true,
-    });
+  ): Promise<HydratedDocument<Question>> {
+    const updated = await this.questionModel.findByIdAndUpdate(
+      id,
+      updateQuestionDto,
+      {
+        new: true,
+      },
+    );
+    if (!updated)
+      throw new NotFoundException(`Question with ID ${id} not found`);
+    return updated;
   }
 
   async createOne(question: Question): Promise<HydratedDocument<Question>> {
-    const newQuestion = new this.questionModel(question);
-    console.log(newQuestion);
-    await newQuestion.save();
-    return newQuestion;
+    try {
+      const newQuestion = new this.questionModel(question);
+      return await newQuestion.save();
+    } catch (error: unknown) {
+      if (error instanceof MongooseError) {
+        throw new ConflictException(
+          "A question with this content already exists",
+        );
+      }
+      throw error;
+    }
   }
 
   async createMany(
@@ -185,7 +217,9 @@ export class QuestionService {
     const correctOptIndex = qinDb.correctOptionIndex;
     const correctAnswer = qinDb.options.find((_, i) => i === correctOptIndex);
     if (!correctAnswer) {
-      throw new Error("error");
+      throw new NotFoundException(
+        `Correct answer for question with ID: ${questionId} not found.`,
+      );
     }
 
     if (userOptionIndex !== correctOptIndex) {

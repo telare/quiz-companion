@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateFavoriteQuestionDto } from "./dto/create-favorite-question.dto";
 import { InjectModel } from "@nestjs/mongoose";
 import { Favorite } from "../schemas/favorite.schema";
@@ -32,11 +32,18 @@ export class FavoriteQuestionService {
   }: {
     userId: string;
     questionId: string;
-  }): Promise<HydratedDocument<Favorite> | null> {
-    return this.favoriteModel.findOne().where({
+  }): Promise<HydratedDocument<Favorite>> {
+    const fav = await this.favoriteModel.findOne().where({
       userId,
       questionId,
     });
+
+    if (!fav)
+      throw new NotFoundException(
+        `Favorite question for userId ${userId} with questionId ${questionId} not found.`,
+      );
+
+    return fav;
   }
 
   removeOne({

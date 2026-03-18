@@ -18,7 +18,7 @@ export class CreateQuestionDTO {
   @IsString()
   questionText: string;
 
-  @IsEnum([JS_TopicTitle, ENGLISH_TopicTitle])
+  @IsEnum({ ...JS_TopicTitle, ...ENGLISH_TopicTitle })
   topicTitle: JS_TopicTitle | ENGLISH_TopicTitle;
 
   @IsEnum(Difficulty)

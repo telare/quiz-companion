@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Question {
@@ -109,8 +110,11 @@ const DOMAINS = {
   },
 };
 const DIFFICULTIES = ["junior", "middle", "senior"];
+const AI_STUDIO = process.env.AI_STUDIO;
+const QUIZ_API_ENDPOINT = process.env.QUIZ_API_ENDPOINT;
+if (!AI_STUDIO || !QUIZ_API_ENDPOINT) throw new Error("Misssing env variables");
 
-const genAI = new GoogleGenerativeAI(process.env.AI_STUDIO || "");
+const genAI = new GoogleGenerativeAI(AI_STUDIO);
 const AI_MODEL = "gemini-2.5-flash";
 const RESPONSE_TYPE = "application/json";
 
@@ -200,7 +204,7 @@ async function generateQuestion(
 }
 
 async function postToEndpoint(question: Question): Promise<Question> {
-  const res = await fetch(process.env.QUIZ_API_ENDPOINT || "", {
+  const res = await fetch(QUIZ_API_ENDPOINT || "", {
     method: "POST",
     body: JSON.stringify(question),
   });

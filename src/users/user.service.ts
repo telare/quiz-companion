@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model } from "mongoose";
 import { User } from "../schemas/user.schema";
@@ -13,15 +13,23 @@ export class UserService {
     return this.userModel.find().exec();
   }
 
-  async findOne(id: string): Promise<HydratedDocument<User> | null> {
-    return this.userModel.findById(id).exec();
+  async findOne(id: string): Promise<HydratedDocument<User>> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
   }
 
-  async findByName(name: string): Promise<HydratedDocument<User> | null> {
-    return this.userModel.findOne({ username: name });
+  async findByName(name: string): Promise<HydratedDocument<User>> {
+    const user = await this.userModel.findOne({ username: name });
+    if (!user) {
+      throw new NotFoundException(`User with name ${name} not found`);
+    }
+    return user;
   }
 
-  async create(user: User): Promise<HydratedDocument<User> | null> {
+  async create(user: User): Promise<HydratedDocument<User>> {
     const newUser = new this.userModel(user);
     return await newUser.save();
   }
