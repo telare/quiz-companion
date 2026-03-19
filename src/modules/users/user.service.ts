@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model } from "mongoose";
-import { User } from "src/schemas";
+import { User } from "../../schemas";
 
 @Injectable()
 export class UserService {
@@ -13,18 +13,18 @@ export class UserService {
     return this.userModel.find().exec();
   }
 
-  async findOne(id: string): Promise<HydratedDocument<User>> {
+  async findOne(id: string): Promise<HydratedDocument<User> | null> {
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      return null;
     }
     return user;
   }
 
-  async findByName(name: string): Promise<HydratedDocument<User>> {
+  async findByName(name: string): Promise<HydratedDocument<User> | null> {
     const user = await this.userModel.findOne({ username: name });
     if (!user) {
-      throw new NotFoundException(`User with name ${name} not found`);
+      return null;
     }
     return user;
   }

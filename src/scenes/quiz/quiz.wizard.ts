@@ -6,10 +6,10 @@ import { BotService } from "../../modules/bot/bot.service";
 import { Markup } from "telegraf";
 import { MyWizardState, TopicTitle } from "../wizard-state.interface";
 import { Category, Difficulty } from "../../schemas/question.schema";
-import { AuthGuard } from "src/common/guards";
-import { QuestionService } from "src/modules/question/question.service";
-import { FavoriteQuestionService } from "src/modules/favorite-question/favorite-question.service";
-import { UserService } from "src/modules/users/user.service";
+import { AuthGuard } from "../../common/guards";
+import { QuestionService } from "../../modules/question/question.service";
+import { FavoriteQuestionService } from "../../modules/favorite-question/favorite-question.service";
+import { UserService } from "../../modules/users/user.service";
 
 /* 
 Core workflow logic:
@@ -22,12 +22,12 @@ Core workflow logic:
 @UseGuards(AuthGuard)
 @Wizard("QUIZ_WIZARD")
 export class QuizWizard {
+  private readonly logger = new Logger(QuizWizard.name);
   constructor(
     private readonly questionService: QuestionService,
     private readonly botService: BotService,
     private readonly favoriteService: FavoriteQuestionService,
     private readonly userService: UserService,
-    private readonly logger = new Logger(QuizWizard.name),
   ) {}
   private async logOneQuestion(@Ctx() ctx: WizardSceenContext) {
     const state = ctx.wizard.state as MyWizardState;
@@ -264,6 +264,10 @@ export class QuizWizard {
         questionId,
         parseInt(choice),
       );
+      if (!result) {
+        await ctx.reply("Something went wrong while checking the question.");
+        return;
+      }
       const state = ctx.wizard.state as MyWizardState;
 
       const userId = state.userId;

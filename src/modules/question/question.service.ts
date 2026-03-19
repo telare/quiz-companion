@@ -1,14 +1,9 @@
-import {
-  ConflictException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from "@nestjs/common";
+import { ConflictException, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HydratedDocument, Model, MongooseError } from "mongoose";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { FavoriteQuestionService } from "../favorite-question/favorite-question.service";
-import { Category, Question } from "src/schemas";
+import { Category, Question } from "../../schemas";
 import { BotService } from "../bot/bot.service";
 
 @Injectable()
@@ -71,17 +66,14 @@ export class QuestionService {
   async findOneCustomized(
     topicTitle: Question["topicTitle"],
     difficulty: Question["difficulty"],
-  ): Promise<HydratedDocument<Question>> {
+  ): Promise<HydratedDocument<Question> | null> {
     const q = await this.questionModel
       .findOne({
         topicTitle,
         difficulty,
       })
       .exec();
-    if (!q)
-      throw new NotFoundException(
-        `Question with topicTitle ${topicTitle}, difficulty ${difficulty} not found`,
-      );
+    if (!q) return null;
     return this.questionModel.hydrate(q);
   }
   async findManyCustomized(
@@ -126,36 +118,36 @@ export class QuestionService {
     ]);
   }
 
-  async findRandom(): Promise<HydratedDocument<Question>> {
+  async findRandom(): Promise<HydratedDocument<Question> | null> {
     const result = await this.questionModel
       .aggregate([{ $sample: { size: 1 } }])
       .exec();
-    if (result.length === 0)
-      throw new NotFoundException(`Random question not found`);
+    if (result.length === 0) return null;
     return this.questionModel.hydrate(result[0]);
   }
 
-  async findRandomByTopic(topic: string): Promise<HydratedDocument<Question>> {
+  async findRandomByTopic(
+    topic: string,
+  ): Promise<HydratedDocument<Question> | null> {
     const result = await this.questionModel
       .aggregate([{ $match: { topicTitle: topic } }, { $sample: { size: 1 } }])
       .exec();
-    if (result.length === 0)
-      throw new NotFoundException(`Question with topic ${topic} not found`);
+    if (result.length === 0) return null;
     return this.questionModel.hydrate(result[0]);
   }
 
-  async findById(id: string): Promise<HydratedDocument<Question>> {
+  async findById(id: string): Promise<HydratedDocument<Question> | null> {
     const q = await this.questionModel.findById(id).exec();
     if (!q) {
-      throw new NotFoundException(`Question with id ${id} not found`);
+      return null;
     }
     return q;
   }
 
-  async findByText(text: string): Promise<HydratedDocument<Question>> {
+  async findByText(text: string): Promise<HydratedDocument<Question> | null> {
     const q = await this.questionModel.findOne({ text });
     if (!q) {
-      throw new NotFoundException(`Question with text ${text} not found`);
+      return null;
     }
     return q;
   }
@@ -163,7 +155,7 @@ export class QuestionService {
   async updateOne(
     id: string,
     updateQuestionDto: UpdateQuestionDto,
-  ): Promise<HydratedDocument<Question>> {
+  ): Promise<HydratedDocument<Question> | null> {
     const updated = await this.questionModel.findByIdAndUpdate(
       id,
       updateQuestionDto,
@@ -171,8 +163,7 @@ export class QuestionService {
         new: true,
       },
     );
-    if (!updated)
-      throw new NotFoundException(`Question with ID ${id} not found`);
+    if (!updated) return null;
     return updated;
   }
 
@@ -204,22 +195,18 @@ export class QuestionService {
     isCorrect: boolean;
     correctAnswer: string;
     explanation: string;
-  }> {
+  } | null> {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
     if (!qinDb) {
       this.logger.warn(
         `Attempted to check non-existent question ID: ${questionId}`,
       );
-      throw new NotFoundException(
-        "Question has not been founded in the database. Please try again later.",
-      );
+      return null;
     }
     const correctOptIndex = qinDb.correctOptionIndex;
     const correctAnswer = qinDb.options.find((_, i) => i === correctOptIndex);
     if (!correctAnswer) {
-      throw new NotFoundException(
-        `Correct answer for question with ID: ${questionId} not found.`,
-      );
+      return null;
     }
 
     if (userOptionIndex !== correctOptIndex) {

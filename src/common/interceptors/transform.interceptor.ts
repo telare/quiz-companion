@@ -15,12 +15,16 @@ export interface Response<T> {
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<
   T, // what returns a controller
-  Response<T> // in what is transformed
+  Response<T> | T // in what is transformed
 > {
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>, // type of what a route handler returns
-  ): Observable<Response<T>> {
+  ): Observable<Response<T> | T> {
+    const host = context.getType();
+    if (host !== "http") {
+      return next.handle();
+    }
     return next.handle().pipe(map((data) => ({ success: true, data }))); // handle() invokes the route handler
   }
 }

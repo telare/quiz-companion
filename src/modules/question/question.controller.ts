@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   ParseArrayPipe,
   Patch,
@@ -11,7 +12,7 @@ import { QuestionService } from "./question.service";
 import { CreateQuestionDTO } from "./dto/create-question.dto";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Question } from "src/schemas";
+import { Question } from "../../schemas";
 @ApiTags("questions")
 @Controller("questions")
 export class QuestionController {
@@ -34,8 +35,12 @@ export class QuestionController {
   @ApiOperation({ summary: "Get a question" })
   @ApiResponse({ status: 200 })
   @Get(":id")
-  async getOne(@Param("id") id: string): Promise<Question | null> {
-    return await this.questionService.findById(id);
+  async getOne(@Param("id") id: string): Promise<Question> {
+    const question = await this.questionService.findById(id);
+    if (!question) {
+      throw new NotFoundException(`Question with id ${id} not found`);
+    }
+    return question;
   }
 
   @ApiOperation({ summary: "Post many questions" })
@@ -55,6 +60,10 @@ export class QuestionController {
     @Param("id") id: string,
     @Body() updateQuestionDto: UpdateQuestionDto,
   ) {
-    return await this.questionService.updateOne(id, updateQuestionDto);
+    const updated = await this.questionService.updateOne(id, updateQuestionDto);
+    if (!updated) {
+      throw new NotFoundException(`Question with ID ${id} not found`);
+    }
+    return updated;
   }
 }

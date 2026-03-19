@@ -5,7 +5,7 @@ import { Markup, Scenes } from "telegraf";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
 import { getErrorMessage, WIZARD_KEYS } from "../../../common/utils";
 import { BotContext } from "../../../bot.context";
-import { AuthGuard } from "src/common/guards";
+import { AuthGuard } from "../../../common/guards";
 @UseGuards(AuthGuard)
 @Update()
 export class QuizCommand {

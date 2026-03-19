@@ -12,7 +12,7 @@ import {
   Difficulty,
   ENGLISH_TopicTitle,
   JS_TopicTitle,
-} from "src/schemas";
+} from "../../../schemas";
 
 export class CreateQuestionDTO {
   @IsString()
