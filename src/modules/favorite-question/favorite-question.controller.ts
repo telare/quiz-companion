@@ -6,7 +6,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 export class FavoriteQuestionController {
   constructor(private readonly favoriteService: FavoriteQuestionService) {}
 
-  @ApiOperation({ summary: "Post a question" })
+  @ApiOperation({ summary: "Post a favorite question" })
   @ApiResponse({ status: 200 })
   @Post(":questionId")
   async save(

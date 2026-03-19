@@ -38,9 +38,9 @@ export class QuizCommand {
           parse_mode: "HTML",
         },
       );
+
       for (const s of saved) {
         const q = await this.questionService.findById(s.questionId);
-
         if (!q) {
           continue;
         }

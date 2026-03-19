@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { HydratedDocument, Model } from "mongoose";
+import { DeleteResult, HydratedDocument, Model } from "mongoose";
 import { User } from "../../schemas";
 
 @Injectable()
@@ -8,6 +8,11 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
+
+  async create(user: User): Promise<HydratedDocument<User>> {
+    const newUser = new this.userModel(user);
+    return await newUser.save();
+  }
 
   async findAll(): Promise<HydratedDocument<User>[]> {
     return this.userModel.find().exec();
@@ -29,9 +34,10 @@ export class UserService {
     return user;
   }
 
-  async create(user: User): Promise<HydratedDocument<User>> {
-    const newUser = new this.userModel(user);
-    return await newUser.save();
+  removeOne({ userId }: { userId: string }): Promise<DeleteResult> {
+    return this.userModel.deleteOne().where({
+      userId,
+    });
   }
 
   async incrementPoints(userName: string, amount: number) {
