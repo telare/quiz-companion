@@ -13,7 +13,9 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<
+export class TransformInterceptor<
+  T extends Response<T>,
+> implements NestInterceptor<
   T, // what returns a controller
   Response<T> | T // in what is transformed
 > {

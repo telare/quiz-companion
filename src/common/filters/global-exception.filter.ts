@@ -4,6 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   Logger,
+  HttpStatus,
 } from "@nestjs/common";
 import { Request, Response } from "express";
 
@@ -13,35 +14,27 @@ interface NestErrorResponse {
   statusCode: number;
 }
 
-@Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
-  catch(exception: HttpException, host: ArgumentsHost) {
-    const hostType = host.getType();
-
-    if (hostType !== "http") {
-      const status = exception.getStatus();
-      const response = exception.getResponse();
-
-      this.logger.error(
-        `Exception in [${hostType}] context: ${JSON.stringify(response)}, status - ${status}`,
-      );
-
-      return;
-    }
-
+@Catch()
+export class GlobalExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger("GlobalError");
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
     /*
      * NestJS errors come in two "shapes":
      * 1. Simple String: throw new ForbiddenException('No access') -> "No access"
      * 2. Detailed Object: Validation errors -> { message: ['error1', 'error2'], ... }
      */
-    const exceptionResponse = exception.getResponse();
-
+    const exceptionResponse =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : "Internal provider error";
     /**
      * STEP: Extraction
      * If exceptionResponse is an object, it's a built-in Nest error (like Validation).
@@ -52,7 +45,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       typeof exceptionResponse === "object"
         ? (exceptionResponse as NestErrorResponse).message
         : exceptionResponse;
-
+    this.logger.error(
+      `Status: ${status} Error: ${JSON.stringify(message)} Path: ${request.url}`,
+    );
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),

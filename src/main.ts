@@ -7,7 +7,7 @@ import { Logger, ValidationPipe } from "@nestjs/common";
 import { ExpressAdapter } from "@nestjs/platform-express";
 import express from "express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { HttpExceptionFilter } from "./common/filters";
+import { GlobalExceptionFilter } from "./common/filters";
 import {
   LoggingInterceptor,
   TransformInterceptor,
@@ -23,7 +23,7 @@ async function bootstrap() {
     new LoggingInterceptor(),
     new TransformInterceptor(),
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
   const config = new DocumentBuilder()
     .setTitle("Quiz Companion API")

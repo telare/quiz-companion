@@ -40,8 +40,12 @@ export class QuizCommand {
       );
 
       for (const s of saved) {
+        console.log(s.questionId)
         const q = await this.questionService.findById(s.questionId);
         if (!q) {
+          console.warn(
+            `Question ID ${s.questionId} found in favorites but missing in Questions collection.`,
+          );
           continue;
         }
         const { fullMessage: questionMessage } =
@@ -73,6 +77,7 @@ export class QuizCommand {
         });
       }
     } catch (error: unknown) {
+      console.error(error);
       await ctx.reply(getErrorMessage(error));
     }
   }
@@ -130,6 +135,7 @@ export class QuizCommand {
 
       await ctx.editMessageReplyMarkup({ inline_keyboard: updatedKeyboard });
     } catch (error: unknown) {
+      console.error(error);
       await ctx.reply(getErrorMessage(error));
     }
   }
@@ -183,6 +189,7 @@ export class QuizCommand {
 
       await ctx.editMessageReplyMarkup({ inline_keyboard: updatedKeyboard });
     } catch (error: unknown) {
+      console.error(error);
       await ctx.reply(getErrorMessage(error));
     }
   }
