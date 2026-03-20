@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/telare/quiz-companion/compare/v0.0.3...v0.0.4) (2026-03-20)
+
+
+### Features
+
+* add GitHub Actions workflow for release automation ([e9521af](https://github.com/telare/quiz-companion/commit/e9521af7831d8b1060887d5b0e5c4deeebaba675))
+* improve service methods ([53768b5](https://github.com/telare/quiz-companion/commit/53768b545897f486404d069e3d811b35f2cc34a3))
+* **user:** add ranking system ([f6cd7a1](https://github.com/telare/quiz-companion/commit/f6cd7a17e3829c438b1cd73db912b56992d6f5b0))
+
 ### 0.0.3 (2026-03-19)
 
 
