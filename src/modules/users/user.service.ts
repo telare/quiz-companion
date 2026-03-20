@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DeleteResult, HydratedDocument, Model } from "mongoose";
-import { User } from "../../schemas";
+import { User, UserRank } from "../../schemas";
 
 @Injectable()
 export class UserService {
@@ -47,10 +47,7 @@ export class UserService {
     );
   }
 
-  async decrementPoints(userName: string, amount: number) {
-    await this.userModel.updateOne(
-      { username: userName, totalPoints: { $gt: 0 } },
-      { $inc: { totalPoints: -amount } },
-    );
+  async updateRank(userName: string, rank: UserRank) {
+    await this.userModel.updateOne({ username: userName }, { rank });
   }
 }

@@ -1,7 +1,7 @@
 import { Wizard, WizardStep, Context, Action, Ctx } from "nestjs-telegraf";
 import type { WizardSceenContext } from "../wizard-scene.context";
 import { Logger, ServiceUnavailableException, UseGuards } from "@nestjs/common";
-import { getErrorMessage } from "../../common/utils";
+import { DIFFICULTY_MULTIPLIERS, getErrorMessage } from "../../common/utils";
 import { BotService } from "../../modules/bot/bot.service";
 import { Markup } from "telegraf";
 import { MyWizardState, TopicTitle } from "../wizard-state.interface";
@@ -10,6 +10,7 @@ import { AuthGuard } from "../../common/guards";
 import { QuestionService } from "../../modules/question/question.service";
 import { FavoriteQuestionService } from "../../modules/favorite-question/favorite-question.service";
 import { UserService } from "../../modules/users/user.service";
+import { UserRank } from "src/schemas";
 
 /* 
 Core workflow logic:
@@ -65,6 +66,23 @@ export class QuizWizard {
     });
   }
 
+  private getRank(totalPoints: number): UserRank {
+    if (totalPoints >= 0 && totalPoints <= 30) {
+      return UserRank.Iron;
+    } else if (totalPoints <= 50) {
+      return UserRank.Bronze;
+    } else if (totalPoints <= 80) {
+      return UserRank.Silver;
+    } else if (totalPoints <= 105) {
+      return UserRank.Gold;
+    } else if (totalPoints <= 130) {
+      return UserRank.Platinum;
+    } else if (totalPoints <= 170) {
+      return UserRank.Diamond;
+    }
+    return UserRank.Master;
+  }
+
   @WizardStep(1)
   async onEnter(@Context() ctx: WizardSceenContext) {
     await ctx.reply("Welcome!");
@@ -84,6 +102,9 @@ export class QuizWizard {
         correct: 0,
         incorrect: 0,
       };
+      state.rank = userInDb.rank;
+      state.totalPoints = userInDb.totalPoints;
+
       const categories = await this.questionService.getCategories();
 
       if (!categories) {
@@ -352,18 +373,20 @@ export class QuizWizard {
       difficulty,
       topic,
       quizLength,
+      totalPoints,
+      rank,
     } = state;
 
     const percentage = Math.round((correct / (quizLength || 1)) * 100);
-    let rank = "🥉 Keep practicing!";
-    if (percentage >= 80) rank = "🥇 Interview Ready!";
-    else if (percentage >= 50) rank = "🥈 Getting there!";
 
     const header = `<b>🏁 Quiz Completed!</b>\n\n`;
-
+    const difficultyMultiplier = difficulty
+      ? DIFFICULTY_MULTIPLIERS[difficulty]
+      : 1;
     const details = [
       `<b>Topic:</b> ${topic}`,
       `<b>Level:</b> ${difficulty}`,
+      `<b>Level Multiplier:</b> x${difficultyMultiplier}`,
       `— — — — — — — — — — — —\n`,
     ].join("\n");
 
@@ -373,10 +396,13 @@ export class QuizWizard {
       `📊 <b>Accuracy:</b> <code>${percentage}%</code>`,
       `— — — — — — — — — — — —\n`,
     ].join("\n");
-    const finalScrore = correct - incorrect;
+
+    const finalScore = (correct - incorrect) * difficultyMultiplier;
+    const newRank = this.getRank(totalPoints ?? 0);
     const footer = [
-      `🏆 <b>Result:</b> ${rank}`,
-      `✨ <b>Final score:</b> <code>${finalScrore > 0 ? "+" : ""}${finalScrore}</code>`,
+      `🏆 <b>Rank before:</b> ${rank}`,
+      `🏆 <b>Ranl after:</b> ${newRank}`,
+      `✨ <b>Final score:</b> <code>${finalScore > 0 ? "+" : ""}${finalScore}</code>`,
       `\n<i>Type /quiz to start a new session!</i>`,
     ]
       .filter(Boolean)
@@ -386,10 +412,11 @@ export class QuizWizard {
 
     const userName = ctx.from?.username;
     if (userName) {
-      await this.userService.incrementPoints(userName, finalScrore);
+      await this.userService.incrementPoints(userName, finalScore);
+      await this.userService.updateRank(userName, newRank);
     }
 
-    const shareText = `\n\n🎯 Just completed a ${topic} interview quiz!\n\n✅ Correct: ${correct}/${quizLength}\n📊 Accuracy: ${percentage}%\n🏆 Rank: ${rank}\n\n💻 Think you can beat my score? Try it yourself!`;
+    const shareText = `\n\n🎯 Just completed a ${topic} interview quiz!\n\n✅ Correct: ${correct}/${quizLength}\n📊 Accuracy: ${percentage}%\n🏆 Rank: ${newRank}\n\n💻 Think you can beat my score? Try it yourself!`;
 
     const keyboard = Markup.inlineKeyboard([
       [Markup.button.switchToChat("Share my result ↗️", shareText)],

@@ -21,6 +21,7 @@ export class UserCommand {
       "",
       `🏷 <b>Username:</b> @${user.username}`,
       `✨ <b>Total Points:</b> <code>${user.totalPoints ?? 0}</code>`,
+      `🏆 <b>Rank:</b> <code>${user.rank}</code>`,
       "",
       "Keep practicing to improve your score!",
     ].join("\n");
