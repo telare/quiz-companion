@@ -50,9 +50,7 @@ const DOMAINS = {
    - junior (A1-A2): basic rules, common patterns, everyday sentences.
    - middle (B1-B2): exceptions, context-dependent rules, common mistakes.
    - senior (C1-C2): nuanced usage, formal/academic register, rare edge cases, native-speaker subtleties.`,
-    codeSnippetRule: `3. The "sentenceExample" field must be a single string with a natural example sentence. If purely theoretical, set to null.`,
-    codeSnippetField: `"sentenceExample": "A natural example sentence, or null"`,
-    optionsRule: `4. The "options" field must be an array of exactly 4 strings. For fill-in-the-blank: word/phrase choices. For error-correction: corrected sentence versions.`,
+    optionsRule: `The "options" field must be an array of exactly 4 strings. For fill-in-the-blank: word/phrase choices. For error-correction: corrected sentence versions.`,
     role: "Senior English Language Expert and Linguist",
   },
 
@@ -90,8 +88,6 @@ const DOMAINS = {
    - junior: syntax basics, common built-ins, simple patterns.
    - middle: edge cases, async behavior, tricky coercion, common bugs.
    - senior: engine internals, performance tradeoffs, spec-level subtleties.`,
-    codeSnippetRule: `The "codeSnippet" field must be a valid code string with \\n for newlines and escaped quotes. Use single quotes inside code. Remove the field if purely theoretical.`,
-    codeSnippetField: `"codeSnippet": "code string with \\n newlines". Remove the field if purely theoretical.`,
     optionsRule: `The "options" field must be an array of exactly 4 strings. For predict_output: the exact console output. For code_completion: the missing code fragment.`,
     role: "Senior Software Engineer and Technical Interviewer",
   },
@@ -104,6 +100,7 @@ if (!AI_STUDIO || !QUIZ_API_ENDPOINT) throw new Error("Misssing env variables");
 const genAI = new GoogleGenerativeAI(AI_STUDIO);
 const AI_MODEL = "gemini-2.5-flash";
 const RESPONSE_TYPE = "application/json";
+const QUESTIONS_PER_BATCH = 10;
 
 function getPromptTemplate(
   domain: DomainType,
@@ -118,13 +115,12 @@ function getPromptTemplate(
     );
 
   const topicList = cfg.topics.join(", ");
-  const exampleField = cfg.codeSnippetField;
 
   return `
 Act as a ${cfg.role} specializing in ${category}.
 Your task is to generate high-quality quiz questions for a Telegram Quiz Bot.
 
-Generate an array of 10 JSON objects based on the topic: ${topic} at difficulty: ${difficulty}.
+Generate an array of ${QUESTIONS_PER_BATCH} JSON objects based on the topic: ${topic} at difficulty: ${difficulty}.
 
 TOPIC RESTRICTION: The "topicTitle" field MUST be exactly one of:
 [${topicList}]
@@ -133,11 +129,12 @@ Map the closest match if needed.
 Strict Rules:
 1. ONLY output a valid JSON array. No markdown, no extra text.
 2. Adapt complexity to the difficulty level:${cfg.difficultyGuide}
-3. ${cfg.codeSnippetRule}
-4. ${cfg.optionsRule}
-5. The "correctOptionIndex" must be an integer (0–3).
-6. The "explanation" field MUST be strictly under 200 characters.
-8. Use only double quotes "" for all JSON keys and string values.
+3. The "codeSnippet" field must be a valid code string with \\n for newlines and escaped quotes. Use single quotes inside code. Omit the field if purely theoretical.
+5. The "sentenceExample" field must be a single string with a natural example sentence. If purely theoretical, omit the field
+6. ${cfg.optionsRule}
+7. The "correctOptionIndex" must be an integer (0–3).
+8. The "explanation" field MUST be strictly under 200 characters.
+9. Use only double quotes "" for all JSON keys and string values.
 
 Each object in the array must follow this structure:
 {
@@ -145,7 +142,6 @@ Each object in the array must follow this structure:
   "difficulty": "${difficulty}",
   "category": "${category}",
   "questionText": "Question string. For fill-in-the-blank or code_completion, use _____ as the blank.",
-  ${exampleField},
   "options": ["A", "B", "C", "D"],
   "correctOptionIndex": 0,
   "explanation": "Brief rule or gotcha explanation < 200 chars"
@@ -276,7 +272,7 @@ async function main() {
     .flatMap((r) => r.value);
   console.log(allQuestions);
   console.log(
-    `✅ Generated ${allQuestions.length} total questions. Validating...`,
+    `✅ Generated ${allQuestions.length * QUESTIONS_PER_BATCH} total questions. Validating...`,
   );
 
   const validQuestions: Question[] = [];
