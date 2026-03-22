@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Category } from "src/schemas";
+import { Category } from "../schemas";
 
 interface Question {
   topicTitle: string;

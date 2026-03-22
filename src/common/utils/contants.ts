@@ -1,4 +1,4 @@
-import { Difficulty } from "src/schemas";
+import { Difficulty } from "../../schemas";
 
 export const DIFFICULTY_MULTIPLIERS: Record<Difficulty, number> = {
   junior: 1,

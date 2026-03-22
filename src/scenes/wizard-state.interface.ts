@@ -1,4 +1,4 @@
-import { UserRank } from "src/schemas";
+import { UserRank } from "../schemas";
 import {
   Difficulty,
   JS_TopicTitle,

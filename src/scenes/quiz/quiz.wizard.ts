@@ -10,7 +10,7 @@ import { AuthGuard } from "../../common/guards";
 import { QuestionService } from "../../modules/question/question.service";
 import { FavoriteQuestionService } from "../../modules/favorite-question/favorite-question.service";
 import { UserService } from "../../modules/users/user.service";
-import { UserRank } from "src/schemas";
+import { UserRank } from "../../schemas";
 
 /* 
 Core workflow logic:
