@@ -40,7 +40,6 @@ export class QuizCommand {
       );
 
       for (const s of saved) {
-        console.log(s.questionId)
         const q = await this.questionService.findById(s.questionId);
         if (!q) {
           console.warn(

@@ -76,7 +76,10 @@ export class Question {
   @Prop({
     required: true,
     type: String,
-    enum: [...Object.values(JS_TopicTitle), ...Object.values(JS_TopicTitle)],
+    enum: [
+      ...Object.values(JS_TopicTitle),
+      ...Object.values(ENGLISH_TopicTitle),
+    ],
     default: JS_TopicTitle.OTHER,
   })
   topicTitle: JS_TopicTitle | ENGLISH_TopicTitle;
@@ -95,11 +98,11 @@ export class Question {
   })
   category: Category;
 
-  @Prop({
-    type: String,
-    default: null,
-  })
-  codeSnippet: string | null;
+  @Prop({ required: false })
+  codeSnippet?: string;
+
+  @Prop({ required: false })
+  sentenceExample?: string;
 
   @Prop({ required: true })
   options: string[];

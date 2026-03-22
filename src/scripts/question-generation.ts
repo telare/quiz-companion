@@ -1,10 +1,10 @@
 import "dotenv/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Category } from "src/schemas";
 
 interface Question {
   topicTitle: string;
   difficulty: string;
-  questionType: string;
   questionText: string;
   options: string[];
   correctOptionIndex: number;
@@ -13,7 +13,6 @@ interface Question {
   codeSnippet?: string | null;
 }
 
-// Extract the domain keys ("language" | "programming")
 type DomainType = keyof typeof DOMAINS;
 
 const DOMAINS = {
@@ -47,12 +46,6 @@ const DOMAINS = {
       "Vocabulary in Context",
     ],
     difficulties: ["junior", "middle", "senior"],
-    questionTypes: [
-      "fill_in_the_blank",
-      "error_correction",
-      "multiple_choice",
-      "sentence_transformation",
-    ],
     difficultyGuide: `
    - junior (A1-A2): basic rules, common patterns, everyday sentences.
    - middle (B1-B2): exceptions, context-dependent rules, common mistakes.
@@ -93,19 +86,13 @@ const DOMAINS = {
       "Performance",
     ],
     difficulties: ["junior", "middle", "senior"],
-    questionTypes: [
-      "predict_output",
-      "error_correction",
-      "multiple_choice",
-      "code_completion",
-    ],
     difficultyGuide: `
    - junior: syntax basics, common built-ins, simple patterns.
    - middle: edge cases, async behavior, tricky coercion, common bugs.
    - senior: engine internals, performance tradeoffs, spec-level subtleties.`,
-    codeSnippetRule: `3. The "codeSnippet" field must be a valid code string with \\n for newlines and escaped quotes. Use single quotes inside code. Set to null if purely theoretical.`,
-    codeSnippetField: `"codeSnippet": "code string with \\n newlines, or null"`,
-    optionsRule: `4. The "options" field must be an array of exactly 4 strings. For predict_output: the exact console output. For code_completion: the missing code fragment.`,
+    codeSnippetRule: `The "codeSnippet" field must be a valid code string with \\n for newlines and escaped quotes. Use single quotes inside code. Remove the field if purely theoretical.`,
+    codeSnippetField: `"codeSnippet": "code string with \\n newlines". Remove the field if purely theoretical.`,
+    optionsRule: `The "options" field must be an array of exactly 4 strings. For predict_output: the exact console output. For code_completion: the missing code fragment.`,
     role: "Senior Software Engineer and Technical Interviewer",
   },
 };
@@ -120,7 +107,7 @@ const RESPONSE_TYPE = "application/json";
 
 function getPromptTemplate(
   domain: DomainType,
-  technology: string,
+  category: Category,
   topic: string,
   difficulty: string,
 ) {
@@ -131,11 +118,10 @@ function getPromptTemplate(
     );
 
   const topicList = cfg.topics.join(", ");
-  const typeList = cfg.questionTypes.map((t) => `"${t}"`).join(" | ");
   const exampleField = cfg.codeSnippetField;
 
   return `
-Act as a ${cfg.role} specializing in ${technology}.
+Act as a ${cfg.role} specializing in ${category}.
 Your task is to generate high-quality quiz questions for a Telegram Quiz Bot.
 
 Generate an array of 10 JSON objects based on the topic: ${topic} at difficulty: ${difficulty}.
@@ -147,18 +133,17 @@ Map the closest match if needed.
 Strict Rules:
 1. ONLY output a valid JSON array. No markdown, no extra text.
 2. Adapt complexity to the difficulty level:${cfg.difficultyGuide}
-${cfg.codeSnippetRule}
-${cfg.optionsRule}
+3. ${cfg.codeSnippetRule}
+4. ${cfg.optionsRule}
 5. The "correctOptionIndex" must be an integer (0–3).
 6. The "explanation" field MUST be strictly under 200 characters.
-7. The "questionType" field MUST be one of: ${typeList}.
 8. Use only double quotes "" for all JSON keys and string values.
 
 Each object in the array must follow this structure:
 {
   "topicTitle": "Chosen from the restricted list",
   "difficulty": "${difficulty}",
-  "questionType": "one of the valid types",
+  "category": "${category}",
   "questionText": "Question string. For fill-in-the-blank or code_completion, use _____ as the blank.",
   ${exampleField},
   "options": ["A", "B", "C", "D"],
@@ -170,12 +155,12 @@ Each object in the array must follow this structure:
 
 async function generateQuestion(
   domain: DomainType,
-  technology: string,
+  category: Category,
   topic: string,
   difficulty: string,
 ) {
   try {
-    const prompt = getPromptTemplate(domain, technology, topic, difficulty);
+    const prompt = getPromptTemplate(domain, category, topic, difficulty);
 
     const model = genAI.getGenerativeModel({
       model: AI_MODEL,
@@ -220,7 +205,7 @@ function validateQuestion(q: Question, domain: DomainType) {
   const required = [
     "topicTitle",
     "difficulty",
-    "questionType",
+    "category",
     "questionText",
     "options",
     "correctOptionIndex",
@@ -236,9 +221,6 @@ function validateQuestion(q: Question, domain: DomainType) {
 
   if (!cfg.difficulties.includes(q.difficulty))
     throw new Error(`Invalid difficulty: "${q.difficulty}"`);
-
-  if (!cfg.questionTypes.includes(q.questionType))
-    throw new Error(`Invalid questionType: "${q.questionType}"`);
 
   if (!Array.isArray(q.options) || q.options.length !== 4)
     throw new Error("options must be an array of exactly 4 strings");
@@ -257,9 +239,9 @@ function validateQuestion(q: Question, domain: DomainType) {
     throw new Error("explanation must be a string under 200 chars");
 }
 
-function getCombos(technology: "Javascript" | "English", domain: DomainType) {
+function getCombos(category: Category, domain: DomainType) {
   const combos: {
-    technology: "Javascript" | "English";
+    category: Category;
     topic: string;
     difficulty: string;
     domain: DomainType;
@@ -269,28 +251,30 @@ function getCombos(technology: "Javascript" | "English", domain: DomainType) {
     const topic = topics[Math.floor(Math.random() * topics.length)];
     const difficulty =
       DIFFICULTIES[Math.floor(Math.random() * DIFFICULTIES.length)];
-    combos.push({ technology, topic, difficulty, domain });
+    combos.push({ category, topic, difficulty, domain });
   }
   return combos;
 }
 
 async function main() {
-  const englishCombos = getCombos("English", "language");
-  const jsCombos = getCombos("Javascript", "programming");
+  const englishCombos = getCombos(Category.ENGLISH, "language");
+  const jsCombos = getCombos(Category.JS, "programming");
 
   console.log(
     `🚀 Starting generation for English: ${englishCombos.length} and JS: ${jsCombos.length} batches...`,
   );
   const combos = [...englishCombos, ...jsCombos];
-
+  console.log(combos);
   const aiResults = await Promise.allSettled(
     combos.map((c) =>
-      generateQuestion(c.domain, c.technology, c.topic, c.difficulty),
+      generateQuestion(c.domain, c.category, c.topic, c.difficulty),
     ),
   );
+  console.log(aiResults);
   const allQuestions = aiResults
     .filter((r) => r.status === "fulfilled")
     .flatMap((r) => r.value);
+  console.log(allQuestions);
   console.log(
     `✅ Generated ${allQuestions.length} total questions. Validating...`,
   );
@@ -299,6 +283,7 @@ async function main() {
   for (const q of allQuestions) {
     try {
       q.questions.forEach((ques) => {
+        console.log(ques);
         validateQuestion(ques, q.domain);
         validQuestions.push(ques);
       });
@@ -317,6 +302,7 @@ async function main() {
   );
 
   const successful = postResults.filter((r) => r.status === "fulfilled").length;
+  console.log(postResults.filter((r) => r.status === "rejected"));
   const failed = postResults.filter((r) => r.status === "rejected").length;
 
   console.log(`--- Finished ---`);

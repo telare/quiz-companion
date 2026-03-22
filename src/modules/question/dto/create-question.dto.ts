@@ -4,8 +4,8 @@ import {
   ArrayNotEmpty,
   ArrayMinSize,
   IsNumber,
-  ValidateIf,
   IsEnum,
+  IsOptional,
 } from "class-validator";
 import {
   Category,
@@ -27,9 +27,13 @@ export class CreateQuestionDTO {
   @IsEnum(Category)
   category: Category;
 
+  @IsOptional()
   @IsString()
-  @ValidateIf((_, value) => value !== null)
-  codeSnippet: string | null;
+  codeSnippet?: string;
+
+  @IsOptional()
+  @IsString()
+  sentenceExample?: string;
 
   @IsArray()
   @IsString({ each: true })
