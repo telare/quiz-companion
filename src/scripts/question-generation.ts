@@ -113,7 +113,10 @@ function getPromptTemplate(
     throw new Error(
       `Unknown domain: "${domain}". Use "language" or "programming".`,
     );
-
+  const exclusivityRule =
+    category === Category.JS
+      ? `RULE: You may use "codeSnippet" (if needed). You are FORBIDDEN from using "sentenceExample".`
+      : `RULE: You may use "sentenceExample" (if needed). You are FORBIDDEN from using "codeSnippet".`;
   const topicList = cfg.topics.join(", ");
 
   return `
@@ -129,6 +132,7 @@ Map the closest match if needed.
 Strict Rules:
 1. ONLY output a valid JSON array. No markdown, no extra text.
 2. Adapt complexity to the difficulty level:${cfg.difficultyGuide}
+${exclusivityRule}
 3. The "codeSnippet" field must be a valid code string with \\n for newlines and escaped quotes. Use single quotes inside code. Omit the field if purely theoretical.
 5. The "sentenceExample" field must be a single string with a natural example sentence. If purely theoretical, omit the field
 6. ${cfg.optionsRule}
@@ -292,7 +296,7 @@ async function main() {
   }
 
   console.log(`📤 Posting ${validQuestions.length} valid questions to DB...`);
-
+  console.log(validQuestions);
   const postResults = await Promise.allSettled(
     validQuestions.map((v) => postToEndpoint(v)),
   );
