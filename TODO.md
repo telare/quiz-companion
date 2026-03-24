@@ -1,32 +1,40 @@
 # TODO: Project Roadmap
+1. Backend Architecture & Code Quality
+   * User Identification (Critical): Currently, the system uses username as the primary key. In Telegram, users can
+     change their username or not have one at all. This will break your database relations.
+       * Fix: Migrate to telegramId (a unique numeric ID) as the primary identifier.
+   * Type Safety in Webhooks: BotController currently uses any for request and response objects. This bypasses NestJS's
+     strongest feature: type safety.
+       * Fix: Define DTOs for Telegram updates or use types from the telegraf library.
+   * Prompt Engineering: The AiService contains a hardcoded, complex string prompt. This makes it difficult to version,
+     test, or swap models.
+       * Fix: Move prompts to a dedicated configuration layer or template files.
+   * Validation Pipe: While class-validator is in package.json, it isn't being used to validate the JSON structure
+     returned by the AI.
+       * Fix: Implement a validation step after the AI returns a question to ensure it strictly follows your schema
+         before saving to MongoDB.
 
-## Phase 1: Critical Fixes (Core Infrastructure)
+2. User Experience (UX) Improvements
+   * Navigation & Discovery: The bot relies heavily on commands (/quiz, /my). Users often forget these.
+       * Improvement: Implement a Persistent Reply Keyboard (bottom menu) with buttons like "🚀 Start Quiz", "📊 My
+         Profile", and "🏆 Ranking".
+   * Wizard Flow Resilience: If a user gets stuck in the QuizWizard, there is no "Cancel" or "Back" button.
+       * Improvement: Add a Cancel button to every step of the wizard to allow users to exit the state gracefully.
+   * Visual Feedback: The feedback after an answer is text-heavy.
+       * Improvement: Use better visual hierarchy (bolding, code blocks for answers) and perhaps "Success/Failure"
+         stickers or distinct emojis to make results instantly scannable.
+   * Latency Transparency: AI generation takes time.
+       * Improvement: Use ctx.sendChatAction('typing') while the AI is thinking so the user knows the bot hasn't
+         crashed.
 
-- [ ] **Fix User Identification**: Migrate from `username` to `telegram_id` as primary identifier in `UserService` and `StartCommand`.
-- [ ] **Type Safety in BotController**: Replace `any` types with proper interfaces/DTOs for Telegram Webhook updates.
-- [ ] **Global Error Handling**: Implement a NestJS Exception Filter to capture errors and send user-friendly feedback via Telegram.
-- [ ] **AI Model Version Fix**: Verify and correct the Gemini model name (change `gemini-2.5-flash` to `gemini-1.5-flash` or `gemini-2.0-flash`).
-
-## Phase 2: Refactoring & Maintainability
-
-- [ ] **AI Prompt Management**: Move logic for generating prompts out of `AiService.ts` and into a dedicated `prompts` directory or config file.
-- [ ] **DTO Validation**: Use `class-validator` and `class-transformer` to validate AI responses before storing them in the database.
-- [ ] **Centralized Constants**: Extract hardcoded strings (topics, difficulties, error messages) to a `src/common/constants.ts` file.
-- [ ] **Improve Webhook Response**: Ensure `BotController` returns proper status codes (200 OK) promptly to avoid Telegram update retries.
-
-## Phase 3: Features & Logic
-
-- [ ] **Favorite Questions Logic**: Complete the implementation of the `favorite-question` module and integrate it with the Bot's UI.
-- [ ] **Feedback UI**: Improve the user interface for quiz feedback (use better emojis, formatting, and interactive buttons).
-- [ ] **Topic Selection**: Allow users to choose specific topics for the quiz instead of hardcoded "promises".
-
-## Phase 4: Quality & Testing
-
-- [ ] **Unit Tests**: Implement unit tests for `AiService`, `UserService`, and `BotService`.
-- [ ] **E2E Tests**: Add end-to-end tests for the main quiz flow using `@nestjs/testing`.
-- [ ] **CI/CD Integration**: Add a GitHub Action or similar to run linting and tests on every push.
-
-## Ongoing
-
-- [ ] **Documentation**: Maintain `README.md` and keep this `TODO.md` updated.
-- [ ] **Logger Improvements**: Expand `LoggerMiddleware` to log more detailed information about Bot interactions.
+3. Production Readiness
+   * Global Exception Filter: Currently, errors are handled locally or just logged. If the AI fails, the user might just
+     see a spinning wheel.
+       * Fix: Create a TelegrafExceptionFilter to catch all errors and send a "Friendly" error message to the user
+         (e.g., "Oops! My brain is a bit foggy, try again in a moment").
+   * Logging & Observability: You have a LoggerMiddleware, but it's basic.
+       * Fix: Integrate a professional logger (like Winston or Pino) and log specific business events (e.g., "Quiz
+         started", "Question generated", "Error in AI response").
+   * Testing Strategy: The repository has zero tests.
+       * Fix: Start with Unit Tests for UserService and AiService. Use @nestjs/testing for E2E tests to simulate a bot
+         update.
