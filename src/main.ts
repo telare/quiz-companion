@@ -12,6 +12,7 @@ import {
   LoggingInterceptor,
   TransformInterceptor,
 } from "./common/interceptors";
+import metadata from "./metadata";
 
 let cachedApp: any;
 const isProd = process.env.NODE_ENV === "production";
@@ -30,6 +31,7 @@ async function bootstrap() {
     .setVersion("1.0")
     .build();
 
+  await SwaggerModule.loadPluginMetadata(metadata);
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api/docs", app, document);
   const logger = new Logger("[bootstrap]");

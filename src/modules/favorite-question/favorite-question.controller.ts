@@ -6,8 +6,27 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 export class FavoriteQuestionController {
   constructor(private readonly favoriteService: FavoriteQuestionService) {}
 
+  @ApiOperation({ summary: "Get all favorite questions of a user" })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
+  @Get()
+  async findAll(@Query("userId") userId: string) {
+    return await this.favoriteService.findAll(userId);
+  }
+
   @ApiOperation({ summary: "Post a favorite question" })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
   @Post(":questionId")
   async save(
     @Param("questionId") questionId: string,
@@ -17,11 +36,5 @@ export class FavoriteQuestionController {
       questionId,
       userId,
     });
-  }
-
-  @ApiOperation({ summary: "Get all favorite questions of a user" })
-  @Get()
-  async findAll(@Query("userId") userId: string) {
-    return await this.favoriteService.findAll(userId);
   }
 }

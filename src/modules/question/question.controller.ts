@@ -19,22 +19,14 @@ import { Throttle } from "@nestjs/throttler";
 export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
 
-  @ApiOperation({ summary: "Post a question" })
-  @ApiResponse({ status: 200 })
-  @Post()
-  async createOne(@Body() question: CreateQuestionDTO) {
-    return await this.questionService.createOne(question);
-  }
-
-  @ApiOperation({ summary: "Get all questions" })
-  @ApiResponse({ status: 200 })
-  @Get()
-  async getAll(): Promise<Question[]> {
-    return await this.questionService.findAll();
-  }
-
   @ApiOperation({ summary: "Get a question" })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
   @Get(":id")
   async getOne(@Param("id") id: string): Promise<Question> {
     const question = await this.questionService.findById(id);
@@ -44,9 +36,41 @@ export class QuestionController {
     return question;
   }
 
+  @ApiOperation({ summary: "Get all questions" })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
+  @Get()
+  async getAll(): Promise<Question[]> {
+    return await this.questionService.findAll();
+  }
+
+  @ApiOperation({ summary: "Post a question" })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
+  @Post()
+  async createOne(@Body() question: CreateQuestionDTO) {
+    return await this.questionService.createOne(question);
+  }
+
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   @ApiOperation({ summary: "Post many questions" })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
   @Post("bulk")
   async createMany(
     @Body(new ParseArrayPipe({ items: CreateQuestionDTO }))
@@ -56,7 +80,13 @@ export class QuestionController {
   }
 
   @ApiOperation({ summary: "Update a question" })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
   @Patch(":id")
   async updateOne(
     @Param("id") id: string,
