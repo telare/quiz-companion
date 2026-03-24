@@ -13,6 +13,7 @@ import { CreateQuestionDTO } from "./dto/create-question.dto";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Question } from "../../schemas";
+import { Throttle } from "@nestjs/throttler";
 @ApiTags("questions")
 @Controller("questions")
 export class QuestionController {
@@ -43,6 +44,7 @@ export class QuestionController {
     return question;
   }
 
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   @ApiOperation({ summary: "Post many questions" })
   @ApiResponse({ status: 200 })
   @Post("bulk")

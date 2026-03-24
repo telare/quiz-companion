@@ -8,6 +8,7 @@ import { UsersModule } from "./modules/users/user.module";
 import { QuestionModule } from "./modules/question/question.module";
 import { FavoriteQuestionModule } from "./modules/favorite-question/favorite-question.module";
 import { LoggerMiddleware } from "./common/loggers";
+import { ThrottlerModule } from "@nestjs/throttler";
 
 @Module({
   imports: [
@@ -20,6 +21,23 @@ import { LoggerMiddleware } from "./common/loggers";
         return { uri };
       },
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: "short",
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: "medium",
+        ttl: 10000,
+        limit: 20,
+      },
+      {
+        name: "long",
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     AiModule,
     UsersModule,
     QuestionModule,
