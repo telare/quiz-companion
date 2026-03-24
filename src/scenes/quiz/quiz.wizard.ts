@@ -1,4 +1,11 @@
-import { Wizard, WizardStep, Context, Action, Ctx } from "nestjs-telegraf";
+import {
+  Wizard,
+  WizardStep,
+  Context,
+  Action,
+  Ctx,
+  Hears,
+} from "nestjs-telegraf";
 import type { WizardSceenContext } from "../wizard-scene.context";
 import { Logger, ServiceUnavailableException, UseGuards } from "@nestjs/common";
 import { DIFFICULTY_MULTIPLIERS, getErrorMessage } from "../../common/utils";
@@ -69,6 +76,7 @@ export class QuizWizard {
   private getRank(totalPoints: number): UserRank {
     if (totalPoints >= 0 && totalPoints <= 30) {
       return UserRank.Iron;
+      // make as const in constants like Silver_USER_RANK = 51
     } else if (totalPoints <= 50) {
       return UserRank.Bronze;
     } else if (totalPoints <= 80) {
@@ -86,6 +94,7 @@ export class QuizWizard {
   @WizardStep(1)
   async onEnter(@Context() ctx: WizardSceenContext) {
     await ctx.reply("Welcome!");
+    await this.botService.replyWithQuizKeyboard(ctx);
     try {
       const state = ctx.wizard.state as MyWizardState;
       const userName = ctx.from?.username;
@@ -125,7 +134,6 @@ export class QuizWizard {
       await ctx.reply(getErrorMessage(error));
     }
   }
-
   @WizardStep(2)
   @Action(/category:(.+)/)
   async onCategoryPick(@Ctx() ctx: WizardSceenContext) {
@@ -248,7 +256,7 @@ export class QuizWizard {
     );
     if (!questionData || questionData.length === 0) {
       await ctx.reply(
-        "No questions found for this topic/difficulty. Please try again.",
+        "Quiz ended. \nNo questions found for this topic/difficulty. Please try again.",
       );
       return ctx.scene.leave();
     }
@@ -365,6 +373,12 @@ export class QuizWizard {
     }
   }
 
+  @Hears("🚫 Cancel Quiz")
+  async onQuizCancel(@Ctx() ctx: WizardSceenContext) {
+    ctx.wizard.selectStep(7);
+    return await this.onResults(ctx);
+  }
+
   @WizardStep(7)
   async onResults(@Ctx() ctx: WizardSceenContext) {
     const state = ctx.wizard.state as MyWizardState;
@@ -384,8 +398,8 @@ export class QuizWizard {
       ? DIFFICULTY_MULTIPLIERS[difficulty]
       : 1;
     const details = [
-      `<b>Topic:</b> ${topic}`,
-      `<b>Level:</b> ${difficulty}`,
+      `<b>Topic:</b> ${topic || ""}`,
+      `<b>Level:</b> ${difficulty || ""}`,
       `<b>Level Multiplier:</b> x${difficultyMultiplier}`,
       `— — — — — — — — — — — —\n`,
     ].join("\n");
@@ -427,6 +441,7 @@ export class QuizWizard {
       parse_mode: "HTML",
       ...keyboard,
     });
+    await this.botService.replyWithStandardKeyboard(ctx);
     await ctx.scene.leave();
   }
 }

@@ -10,7 +10,6 @@
     "sourceMap": true,
     "outDir": "./dist",
     "strictPropertyInitialization": false,
-    "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,

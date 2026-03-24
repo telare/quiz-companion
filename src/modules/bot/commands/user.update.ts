@@ -1,4 +1,4 @@
-import { Command, Ctx, Update } from "nestjs-telegraf";
+import { Command, Ctx, Hears, Update } from "nestjs-telegraf";
 import { UserService } from "../../users/user.service";
 import { BotContext } from "../../../bot.context";
 import { UseGuards } from "@nestjs/common";
@@ -10,6 +10,7 @@ export class UserCommand {
   constructor(private readonly userService: UserService) {}
 
   @Command("my")
+  @Hears(/📊 My Profile/)
   async getMyInfoCommand(@Ctx() ctx: BotContext) {
     const user = ctx.dbUser;
     if (!user) {
@@ -30,6 +31,7 @@ export class UserCommand {
   }
 
   @Command("ranking")
+  @Hears(/🏆 Ranking/)
   async getAppRanking(@Ctx() ctx: BotContext) {
     const users = await this.userService.findAll();
     if (!users || users.length === 0) {

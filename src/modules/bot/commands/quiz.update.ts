@@ -1,5 +1,5 @@
 import { UseGuards } from "@nestjs/common";
-import { Action, Command, Ctx, Update } from "nestjs-telegraf";
+import { Action, Command, Ctx, Hears, Update } from "nestjs-telegraf";
 import { QuestionService } from "../../question/question.service";
 import { Markup, Scenes } from "telegraf";
 import { FavoriteQuestionService } from "../../favorite-question/favorite-question.service";
@@ -15,11 +15,13 @@ export class QuizCommand {
   ) {}
 
   @Command("quiz")
+  @Hears(/🚀 Start Quiz/)
   async handleStartQuiz(@Ctx() ctx: Scenes.SceneContext) {
     await ctx.scene.enter(WIZARD_KEYS.quiz);
   }
 
   @Command("saved")
+  @Hears(/📌 Show saved/)
   async handleSavedQuestions(@Ctx() ctx: BotContext) {
     try {
       const user = ctx.dbUser;

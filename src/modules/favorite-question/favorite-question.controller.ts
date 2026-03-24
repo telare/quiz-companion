@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Param, Query } from "@nestjs/common";
 import { FavoriteQuestionService } from "./favorite-question.service";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+
+// TODO - make CRUD
 @ApiTags("favorites")
 @Controller("favorites")
 export class FavoriteQuestionController {

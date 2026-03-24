@@ -3,6 +3,8 @@ import { InjectModel } from "@nestjs/mongoose";
 import { DeleteResult, HydratedDocument, Model } from "mongoose";
 import { User, UserRank } from "../../schemas";
 
+// TODO - make CRUD
+// TODO - make the controller
 @Injectable()
 export class UserService {
   constructor(

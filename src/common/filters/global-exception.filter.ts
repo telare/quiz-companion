@@ -34,7 +34,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException
         ? exception.getResponse()
-        : "Internal provider error";
+        : "Internal error";
     /**
      * STEP: Extraction
      * If exceptionResponse is an object, it's a built-in Nest error (like Validation).
@@ -46,8 +46,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? (exceptionResponse as NestErrorResponse).message
         : exceptionResponse;
     this.logger.error(
-      `Status: ${status} Error: ${JSON.stringify(message)} Path: ${request.url}`,
+      `\n Status: ${status} \n Error: ${JSON.stringify(message)} \n Path: ${request.url}`,
     );
+    this.logger.error(`\n Exeption text ${JSON.stringify(exception)}`);
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),

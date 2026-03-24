@@ -25,7 +25,7 @@ export class User {
     enum: Object.keys(UserRank),
     default: UserRank.Iron,
   })
-  rank: UserRank;
+  rank?: UserRank;
 }
 
 export type UserDocument = User & Document;
