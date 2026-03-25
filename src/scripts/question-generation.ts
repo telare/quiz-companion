@@ -15,6 +15,17 @@ interface Question {
 
 type DomainType = keyof typeof DOMAINS;
 
+const AI_STUDIO_KEY = process.env.GOOGLE_AI_STUDIO_API_KEY;
+const QUIZ_API_ENDPOINT = process.env.QUIZ_API_ENDPOINT;
+if (!AI_STUDIO_KEY || !QUIZ_API_ENDPOINT)
+  throw new Error("Misssing env variables");
+
+const AI_MODEL = "gemini-2.5-flash";
+const RESPONSE_TYPE = "application/json";
+const QUESTION_EXPLANATION_FIELD_CHAR_LIMIT = 230;
+const QUESTIONS_PER_BATCH = 2;
+
+const DIFFICULTIES = ["junior", "middle", "senior"];
 const DOMAINS = {
   language: {
     topics: [
@@ -28,28 +39,21 @@ const DOMAINS = {
       "Relative Clauses",
       "Conjunctions",
       "Punctuation",
-      "Subject-Verb Agreement",
       "Pronouns",
       "Adjectives and Adverbs",
       "Comparatives and Superlatives",
-      "Gerunds and Infinitives",
-      "Phrasal Verbs",
       "Collocations",
       "Word Order",
       "Determiners",
       "Countable and Uncountable Nouns",
-      "Direct and Indirect Speech",
-      "Inversion",
-      "Ellipsis",
       "Cleft Sentences",
-      "Emphasis",
       "Vocabulary in Context",
     ],
-    difficulties: ["junior", "middle", "senior"],
+    difficulties: DIFFICULTIES,
     difficultyGuide: `
-   - junior (A1-A2): basic rules, common patterns, everyday sentences.
-   - middle (B1-B2): exceptions, context-dependent rules, common mistakes.
-   - senior (C1-C2): nuanced usage, formal/academic register, rare edge cases, native-speaker subtleties.`,
+    - junior (A1-A2): basic rules, common patterns, everyday sentences.
+    - middle (B1-B2): exceptions, context-dependent rules, common mistakes.
+    - senior (C1-C2): nuanced usage, formal/academic register, rare edge cases, native-speaker subtleties.`,
     optionsRule: `The "options" field must be an array of exactly 4 strings. For fill-in-the-blank: word/phrase choices. For error-correction: corrected sentence versions.`,
     role: "Senior English Language Expert and Linguist",
   },
@@ -67,7 +71,6 @@ const DOMAINS = {
       "Generators",
       "Garbage Collection",
       "Classes",
-      "Currying",
       "Destructuring",
       "Map and Set",
       "WeakMap",
@@ -83,26 +86,19 @@ const DOMAINS = {
       "Design Patterns",
       "Performance",
     ],
-    difficulties: ["junior", "middle", "senior"],
+    difficulties: DIFFICULTIES,
     difficultyGuide: `
-   - junior: syntax basics, common built-ins, simple patterns.
-   - middle: edge cases, async behavior, tricky coercion, common bugs.
-   - senior: engine internals, performance tradeoffs, spec-level subtleties.`,
+    - junior: syntax basics, common built-ins, simple patterns.
+    - middle: edge cases, async behavior, tricky coercion, common bugs.
+    - senior: engine internals, performance tradeoffs, spec-level subtleties.`,
     optionsRule: `The "options" field must be an array of exactly 4 strings. For predict_output: the exact console output. For code_completion: the missing code fragment.`,
     role: "Senior Software Engineer and Technical Interviewer",
   },
 };
-const DIFFICULTIES = ["junior", "middle", "senior"];
-const AI_STUDIO = process.env.AI_STUDIO;
-const QUIZ_API_ENDPOINT = process.env.QUIZ_API_ENDPOINT;
-if (!AI_STUDIO || !QUIZ_API_ENDPOINT) throw new Error("Misssing env variables");
 
-const genAI = new GoogleGenerativeAI(AI_STUDIO);
-const AI_MODEL = "gemini-2.5-flash";
-const RESPONSE_TYPE = "application/json";
-const QUESTIONS_PER_BATCH = 10;
+const genAI = new GoogleGenerativeAI(AI_STUDIO_KEY);
 
-function getPromptTemplate(
+function getPrompt(
   domain: DomainType,
   category: Category,
   topic: string,
@@ -133,10 +129,13 @@ Strict Rules:
 5. The "sentenceExample" field must be a single string with a natural example sentence. If purely theoretical, omit the field
 6. ${cfg.optionsRule}
 7. The "correctOptionIndex" must be an integer (0–3).
-8. The "explanation" field MUST be strictly under 200 characters.
-9. Use only double quotes "" for all JSON keys and string values.
+8. The "explanation" field MUST be strictly under ${QUESTION_EXPLANATION_FIELD_CHAR_LIMIT} characters.
+9. Use ONLY double quotes ("") for all JSON keys and string values. Single quotes ('') are strictly forbidden for JSON structure.
+10. INTERNAL QUOTES: If a string value (like questionText or explanation) contains a quote, you MUST escape it with a backslash to prevent breaking the JSON format.
+11. Ensure no trailing commas after the last property in an object or the last object in the array.
+12. CRITICAL: The 'topicTitle' must match the character casing (uppercase/lowercase) of the restricted list EXACTLY. For example, use 'Event loop' instead of 'Event Loop'.
 
-Each object in the array must follow this structure:
+Each object must follow this structure:
 {
   "topicTitle": "Chosen from the restricted list",
   "difficulty": "${difficulty}",
@@ -144,7 +143,7 @@ Each object in the array must follow this structure:
   "questionText": "Question string. For fill-in-the-blank or code_completion, use _____ as the blank.",
   "options": ["A", "B", "C", "D"],
   "correctOptionIndex": 0,
-  "explanation": "Brief rule or gotcha explanation < 200 chars"
+  "explanation": ""
 }
 `.trim();
 }
@@ -156,7 +155,7 @@ async function generateQuestion(
   difficulty: string,
 ) {
   try {
-    const prompt = getPromptTemplate(domain, category, topic, difficulty);
+    const prompt = getPrompt(domain, category, topic, difficulty);
 
     const model = genAI.getGenerativeModel({
       model: AI_MODEL,
@@ -185,6 +184,9 @@ async function generateQuestion(
 }
 
 async function postToEndpoint(question: Question): Promise<Question> {
+  const body = JSON.stringify(question);
+  console.log("[POST ENDPOINT FNC] request body:", body);
+
   const res = await fetch(QUIZ_API_ENDPOINT || "", {
     method: "POST",
     body: JSON.stringify(question),
@@ -199,10 +201,10 @@ function validateQuestion(q: Question, domain: DomainType) {
   if (!cfg) throw new Error(`Unknown domain: "${domain}"`);
 
   const required = [
+    "questionText",
     "topicTitle",
     "difficulty",
     "category",
-    "questionText",
     "options",
     "correctOptionIndex",
     "explanation",
@@ -231,8 +233,13 @@ function validateQuestion(q: Question, domain: DomainType) {
   )
     throw new Error(`Invalid correctOptionIndex: ${q.correctOptionIndex}`);
 
-  if (typeof q.explanation !== "string" || q.explanation.length >= 200)
-    throw new Error("explanation must be a string under 200 chars");
+  if (
+    typeof q.explanation !== "string" ||
+    q.explanation.length >= QUESTION_EXPLANATION_FIELD_CHAR_LIMIT
+  )
+    throw new Error(
+      `explanation must be a string under ${QUESTION_EXPLANATION_FIELD_CHAR_LIMIT} chars`,
+    );
 }
 
 function getCombos(category: Category, domain: DomainType) {
@@ -272,7 +279,7 @@ async function main() {
     .flatMap((r) => r.value);
   console.log(allQuestions);
   console.log(
-    `✅ Generated ${allQuestions.length * QUESTIONS_PER_BATCH} total questions. Validating...`,
+    `✅ Generated ${allQuestions.length * Number(QUESTIONS_PER_BATCH)} total questions. Validating...`,
   );
 
   const validQuestions: Question[] = [];
@@ -291,11 +298,13 @@ async function main() {
     }
   }
 
-  console.log(`📤 Posting ${validQuestions.length} valid questions to DB...`);
-
-  const postResults = await Promise.allSettled(
-    validQuestions.map((v) => postToEndpoint(v)),
+  console.log(
+    `📤 Posting ${validQuestions.length} valid questions to ${QUIZ_API_ENDPOINT}...`,
   );
+  const questionPostArr: Promise<Question>[] = validQuestions.map((v) =>
+    postToEndpoint(v),
+  );
+  const postResults = await Promise.allSettled(questionPostArr);
 
   const successful = postResults.filter((r) => r.status === "fulfilled").length;
   console.log(postResults.filter((r) => r.status === "rejected"));

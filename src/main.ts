@@ -13,6 +13,8 @@ import {
   TransformInterceptor,
 } from "./common/interceptors";
 import metadata from "./metadata";
+import { MongoExceptionFilter } from "./common/filters/mongo-exeption.filter";
+import { HttpExceptionFilter } from "./common/filters/http-exeption.filter";
 
 let cachedApp: any;
 const isProd = process.env.NODE_ENV === "production";
@@ -21,11 +23,18 @@ async function bootstrap() {
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   app.useGlobalInterceptors(
-    new LoggingInterceptor(),
     new TransformInterceptor(),
+    new LoggingInterceptor(),
   );
-  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(),
+    new MongoExceptionFilter(),
+    new HttpExceptionFilter(),
+  );
+
   app.useGlobalPipes(new ValidationPipe());
+
   const config = new DocumentBuilder()
     .setTitle("Quiz Companion API")
     .setVersion("1.0")
@@ -34,6 +43,7 @@ async function bootstrap() {
   await SwaggerModule.loadPluginMetadata(metadata);
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api/docs", app, document);
+
   const logger = new Logger("[bootstrap]");
   if (isProd) {
     await app.init();
