@@ -3,8 +3,8 @@ import { InjectModel } from "@nestjs/mongoose";
 import { DeleteResult, HydratedDocument, Model, MongooseError } from "mongoose";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { FavoriteQuestionService } from "../favorite-question/favorite-question.service";
-import { Category, Question } from "../../schemas";
 import { BotService } from "../bot/bot.service";
+import { Category, Question } from "./entities/question.entity";
 
 @Injectable()
 export class QuestionService {

@@ -30,7 +30,7 @@ export class FavoriteQuestionController {
     },
   })
   @Post(":questionId")
-  async save(
+  async createOne(
     @Param("questionId") questionId: string,
     @Body("userId") userId: string,
   ) {

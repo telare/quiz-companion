@@ -12,12 +12,15 @@ import { DIFFICULTY_MULTIPLIERS, getErrorMessage } from "../../common/utils";
 import { BotService } from "../../modules/bot/bot.service";
 import { Markup } from "telegraf";
 import { MyWizardState, TopicTitle } from "../wizard-state.interface";
-import { Category, Difficulty } from "../../schemas/question.schema";
+import {
+  Category,
+  Difficulty,
+} from "../../modules/question/entities/question.entity";
 import { AuthGuard } from "../../common/guards";
 import { QuestionService } from "../../modules/question/question.service";
 import { FavoriteQuestionService } from "../../modules/favorite-question/favorite-question.service";
 import { UserService } from "../../modules/users/user.service";
-import { UserRank } from "../../schemas";
+import { UserRank } from "../../modules/users/entities/user.entity";
 
 /* 
 Core workflow logic:

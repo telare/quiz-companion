@@ -5,7 +5,7 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { GoogleGenAI } from "@google/genai";
-import { Question } from "../../schemas/question.schema";
+import { Question } from "../question/entities/question.entity";
 
 const AI_MODEL = "gemini-2.5-flash";
 const RESPONSE_TYPE = "application/json";

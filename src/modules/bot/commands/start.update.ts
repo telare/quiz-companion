@@ -2,8 +2,8 @@ import { Ctx, Start, Update } from "nestjs-telegraf";
 import { UserService } from "../../users/user.service";
 import { BotService } from "../bot.service";
 import { BotContext } from "../../../bot.context";
-import { UserRank } from "../../../schemas";
 import { AVAILABLE_COMMANDS } from "../../../common/utils";
+import { UserRank } from "../../users/entities/user.entity";
 
 @Update()
 export class StartCommand {

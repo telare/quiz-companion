@@ -12,8 +12,8 @@ import { QuestionService } from "./question.service";
 import { CreateQuestionDTO } from "./dto/create-question.dto";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Question } from "../../schemas";
 import { Throttle } from "@nestjs/throttler";
+import { Question } from "./entities/question.entity";
 @ApiTags("questions")
 @Controller("questions")
 export class QuestionController {

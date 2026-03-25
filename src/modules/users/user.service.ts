@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DeleteResult, HydratedDocument, Model } from "mongoose";
-import { User, UserRank } from "../../schemas";
+import { User, UserRank } from "./entities/user.entity";
 
 // TODO - make CRUD
 // TODO - make the controller

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Category } from "../schemas";
+import { Category } from "../modules/question/entities/question.entity";
 
 interface Question {
   topicTitle: string;

@@ -1,11 +1,11 @@
-import { UserRank } from "../schemas";
 import {
   Difficulty,
   JS_TopicTitle,
   ENGLISH_TopicTitle,
   Category,
-} from "../schemas/question.schema";
+} from "../modules/question/entities/question.entity";
 import { Scenes } from "telegraf";
+import { UserRank } from "../modules/users/entities/user.entity";
 export type TopicTitle = ENGLISH_TopicTitle | JS_TopicTitle;
 export interface MyWizardState extends Scenes.WizardSessionData {
   userName?: string;

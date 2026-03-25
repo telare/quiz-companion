@@ -7,13 +7,14 @@ import {
   IsEnum,
   IsOptional,
 } from "class-validator";
+
+import { ApiProperty } from "@nestjs/swagger";
 import {
   Category,
   Difficulty,
   ENGLISH_TopicTitle,
   JS_TopicTitle,
-} from "../../../schemas";
-import { ApiProperty } from "@nestjs/swagger";
+} from "../entities/question.entity";
 
 export class CreateQuestionDTO {
   @IsString()

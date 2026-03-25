@@ -1,6 +1,7 @@
 export default async () => {
   const t = {
-    ["./schemas/question.schema"]: await import("./schemas/question.schema"),
+    ["./schemas/question.schema"]:
+      await import("./modules/question/entities/question.entity"),
   };
   return {
     "@nestjs/swagger": {
