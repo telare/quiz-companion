@@ -22,7 +22,6 @@ A modular **NestJS** backend for a Telegram bot that generates dynamic, AI-power
 - **AI Integration:** [Google Gemini AI](https://ai.google.dev/)
 - **Language:** TypeScript
 
-
 ## License
 
 This project is licensed under the MIT License.

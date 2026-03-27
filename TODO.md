@@ -1,11 +1,12 @@
 # TODO: Project Roadmap
 
 0. Code consistency
-  * update constants
-  * make all missing CRUD methods, controllers 
-  * fix /src path or remove the aliase
-  * update errrors with better UX 
-  * add guard with admin rules 
+
+- update constants
+- make all missing CRUD methods, controllers
+- fix /src path or remove the aliase
+- update errrors with better UX
+- add guard with admin rules
 
 1. Backend Architecture & Code Quality
    - User Identification (Critical): Currently, the system uses username as the primary key. In Telegram, users can

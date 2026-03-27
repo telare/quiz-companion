@@ -1,6 +1,11 @@
-import { ConflictException, Injectable, Logger } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { DeleteResult, HydratedDocument, Model, MongooseError } from "mongoose";
+import { HydratedDocument, Model, MongooseError } from "mongoose";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { FavoriteQuestionService } from "../favorite-question/favorite-question.service";
 import { BotService } from "../bot/bot.service";
@@ -93,11 +98,11 @@ export class QuestionService {
   }
 
   async findById(id: string): Promise<HydratedDocument<Question> | null> {
-    const q = await this.questionModel.findById(id).exec();
-    if (!q) {
-      return null;
+    const question = await this.questionModel.findById(id).exec();
+    if (!question) {
+      throw new NotFoundException(`Question with id ${id} not found`);
     }
-    return q;
+    return question;
   }
 
   async findByText(text: string): Promise<HydratedDocument<Question> | null> {
@@ -119,14 +124,22 @@ export class QuestionService {
         new: true,
       },
     );
-    if (!updated) return null;
+    if (!updated) {
+      throw new NotFoundException(`Question with ID ${id} not found`);
+    }
     return updated;
   }
 
-  removeOne({ questionId }: { questionId: string }): Promise<DeleteResult> {
-    return this.questionModel.deleteOne().where({
-      questionId,
-    });
+  async removeOne(
+    questionId: string,
+  ): Promise<HydratedDocument<Question> | null> {
+    const deleted = await this.questionModel
+      .findByIdAndDelete(questionId)
+      .exec();
+    if (!deleted) {
+      throw new NotFoundException(`Question with ID ${questionId} not deleted`);
+    }
+    return deleted;
   }
 
   async checkQuestion(
@@ -192,10 +205,13 @@ export class QuestionService {
     ]);
   }
 
-  async buildQuestion(
-    userId: string,
-    questionData: HydratedDocument<Question>,
-  ) {
+  async buildQuestion({
+    userId,
+    questionData,
+  }: {
+    userId: string;
+    questionData: HydratedDocument<Question>;
+  }) {
     const questionId = questionData._id.toString();
     const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;
     const body = `${questionData.questionText}\n`;

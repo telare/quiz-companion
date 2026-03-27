@@ -66,10 +66,10 @@ export class QuizWizard {
       this.logger.error("missing userId in the wizard's state", userId);
       return;
     }
-    const { fullMessage, keyboard } = await this.questionService.buildQuestion(
+    const { fullMessage, keyboard } = await this.questionService.buildQuestion({
       userId,
       questionData,
-    );
+    });
     await ctx.reply(fullMessage, {
       parse_mode: "HTML",
       ...keyboard,
@@ -341,10 +341,10 @@ export class QuizWizard {
       const keyboard = this.botService.createInlineKeyboard([
         isAlreadySaved ? unSaveButton : saveQuestionButton,
       ]);
-      const { fullMessage } = await this.questionService.buildQuestion(
+      const { fullMessage } = await this.questionService.buildQuestion({
         userId,
-        question,
-      );
+        questionData: question,
+      });
 
       await ctx.editMessageText(fullMessage + feedback, {
         parse_mode: "HTML",
@@ -430,7 +430,7 @@ export class QuizWizard {
     const userName = ctx.from?.username;
     if (userName) {
       await this.userService.incrementPoints(userName, finalScore);
-      await this.userService.updateRank(userName, newRank);
+      await this.userService.updateOne(userName, { rank: newRank });
     }
 
     const shareText = `\n\n🎯 Just completed a ${topic} interview quiz!\n\n✅ Correct: ${correct}/${quizLength}\n📊 Accuracy: ${percentage}%\n🏆 Rank: ${newRank}\n\n💻 Think you can beat my score? Try it yourself!`;

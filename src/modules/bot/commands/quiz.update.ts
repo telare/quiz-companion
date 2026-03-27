@@ -50,7 +50,7 @@ export class QuizCommand {
           continue;
         }
         const { fullMessage: questionMessage } =
-          await this.questionService.buildQuestion(userId, q);
+          await this.questionService.buildQuestion({ userId, questionData: q });
         const optionLabels = ["A", "B", "C", "D"];
         const footer = [
           "",

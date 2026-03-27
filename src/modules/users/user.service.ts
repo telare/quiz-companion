@@ -1,10 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { DeleteResult, HydratedDocument, Model } from "mongoose";
-import { User, UserRank } from "./entities/user.entity";
+import { HydratedDocument, Model } from "mongoose";
+import { User } from "./entities/user.entity";
 
-// TODO - make CRUD
-// TODO - make the controller
 @Injectable()
 export class UserService {
   constructor(
@@ -12,44 +10,91 @@ export class UserService {
   ) {}
 
   async create(user: User): Promise<HydratedDocument<User>> {
-    const newUser = new this.userModel(user);
-    return await newUser.save();
+    const newUser = await this.userModel.create(user);
+    if (!newUser) {
+      throw new NotFoundException(`Users not created.`);
+    }
+
+    return newUser;
+  }
+
+  async createMany(users: User[]): Promise<HydratedDocument<User>[]> {
+    const insertedUsers = await this.userModel.create(users);
+
+    if (!users || users.length === 0) {
+      throw new NotFoundException(`Users not created.`);
+    }
+
+    return insertedUsers;
   }
 
   async findAll(): Promise<HydratedDocument<User>[]> {
-    return this.userModel.find().exec();
+    const users = await this.userModel.find().exec();
+
+    if (!users || users.length === 0) {
+      throw new NotFoundException(`Users not found.`);
+    }
+
+    return users;
   }
 
-  async findOne(id: string): Promise<HydratedDocument<User> | null> {
+  async findOne(id: string): Promise<HydratedDocument<User>> {
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      return null;
+      throw new NotFoundException(`User with id: ${id} not found.`);
     }
     return user;
   }
 
-  async findByName(name: string): Promise<HydratedDocument<User> | null> {
-    const user = await this.userModel.findOne({ username: name });
+  async findByName(name: string): Promise<HydratedDocument<User>> {
+    const user = await this.userModel.findOne({ username: name }).exec();
     if (!user) {
-      return null;
+      throw new NotFoundException(`User with name: ${name} not found.`);
     }
     return user;
   }
 
-  removeOne({ userId }: { userId: string }): Promise<DeleteResult> {
-    return this.userModel.deleteOne().where({
-      userId,
-    });
+  async updateOne(
+    userName: string,
+    newUserInfo: Partial<User>,
+  ): Promise<HydratedDocument<User>> {
+    const updatedOne = await this.userModel
+      .findOneAndUpdate(
+        { username: userName },
+        { ...newUserInfo },
+        { new: true },
+      )
+      .exec();
+
+    if (!updatedOne) {
+      throw new NotFoundException(`User with name: ${userName} not found.`);
+    }
+
+    return updatedOne;
+  }
+
+  async removeOne(id: string): Promise<HydratedDocument<User>> {
+    const deleted = await this.userModel.findByIdAndDelete(id).exec();
+
+    if (!deleted) {
+      throw new NotFoundException(`User with id: ${id} not found.`);
+    }
+
+    return deleted;
   }
 
   async incrementPoints(userName: string, amount: number) {
-    await this.userModel.updateOne(
-      { username: userName },
-      { $inc: { totalPoints: amount } },
-    );
-  }
+    const updatedOne = await this.userModel
+      .findOneAndUpdate(
+        { username: userName },
+        { $inc: { totalPoints: amount } },
+        { new: true },
+      )
+      .exec();
 
-  async updateRank(userName: string, rank: UserRank) {
-    await this.userModel.updateOne({ username: userName }, { rank });
+    if (!updatedOne) {
+      throw new NotFoundException(`User with name: ${userName} not found.`);
+    }
+    return updatedOne;
   }
 }

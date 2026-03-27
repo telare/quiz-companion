@@ -1,8 +1,8 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
-  NotFoundException,
   Param,
   ParseArrayPipe,
   Patch,
@@ -13,8 +13,8 @@ import { CreateQuestionDTO } from "./dto/create-question.dto";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
-import { Question } from "./entities/question.entity";
-@ApiTags("questions")
+
+@ApiTags("Questions")
 @Controller("questions")
 export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
@@ -28,12 +28,8 @@ export class QuestionController {
     },
   })
   @Get(":id")
-  async getOne(@Param("id") id: string): Promise<Question> {
-    const question = await this.questionService.findById(id);
-    if (!question) {
-      throw new NotFoundException(`Question with id ${id} not found`);
-    }
-    return question;
+  async getOne(@Param("id") id: string) {
+    return await this.questionService.findById(id);
   }
 
   @ApiOperation({ summary: "Get all questions" })
@@ -45,7 +41,7 @@ export class QuestionController {
     },
   })
   @Get()
-  async getAll(): Promise<Question[]> {
+  async getAll() {
     return await this.questionService.findAll();
   }
 
@@ -75,7 +71,7 @@ export class QuestionController {
   async createMany(
     @Body(new ParseArrayPipe({ items: CreateQuestionDTO }))
     questions: CreateQuestionDTO[],
-  ): Promise<Question[]> {
+  ) {
     return await this.questionService.createMany(questions);
   }
 
@@ -92,10 +88,19 @@ export class QuestionController {
     @Param("id") id: string,
     @Body() updateQuestionDto: UpdateQuestionDto,
   ) {
-    const updated = await this.questionService.updateOne(id, updateQuestionDto);
-    if (!updated) {
-      throw new NotFoundException(`Question with ID ${id} not found`);
-    }
-    return updated;
+    return await this.questionService.updateOne(id, updateQuestionDto);
+  }
+
+  @ApiOperation({ summary: "Delete a question" })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
+  @Delete(":id")
+  async deleteOne(@Param("id") id: string) {
+    return await this.questionService.removeOne(id);
   }
 }
