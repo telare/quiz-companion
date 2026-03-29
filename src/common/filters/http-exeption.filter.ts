@@ -6,6 +6,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { Request, Response } from "express";
+import { AppResponse } from "../types";
 
 interface NestErrorResponse {
   message: string | string[];
@@ -32,13 +33,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
       `\n Status: ${status} \n Error: ${JSON.stringify(message)} \n Path: ${request.url}`,
     );
     this.logger.error(`\n Exeption text ${JSON.stringify(exception)}`);
-    response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      message,
-      details: "HTTP Error",
-    });
+
+    const resp: AppResponse = {
+      success: false,
+      data: null,
+      error: {
+        statusCode: status,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        method: request.method,
+        message,
+        details: "HTTP Error",
+      },
+    };
+
+    response.status(status).json(resp);
   }
 }

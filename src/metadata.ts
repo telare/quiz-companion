@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default async () => {
   const t = {
     ["./modules/question/entities/question.entity"]:

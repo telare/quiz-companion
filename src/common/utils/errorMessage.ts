@@ -16,7 +16,6 @@ const ERROR_MAP: Record<string | number, string> = {
   [HttpStatus.INTERNAL_SERVER_ERROR]:
     "⚡ An unexpected server error occurred. Please try again later.",
 
-  11000: "📝 This record already exists in our database.",
   ECONNREFUSED: "🌐 Cannot connect to the service. Please try again later.",
 };
 

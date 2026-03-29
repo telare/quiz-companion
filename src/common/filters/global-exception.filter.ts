@@ -7,6 +7,7 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { Request, Response } from "express";
+import { AppResponse } from "../types";
 
 interface NestErrorResponse {
   message: string | string[];
@@ -49,13 +50,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       `\n Status: ${status} \n Error: ${JSON.stringify(message)} \n Path: ${request.url}`,
     );
     this.logger.error(`\n Exeption text ${JSON.stringify(exception)}`);
-    response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      message: Array.isArray(message) ? message[0] : message, // A single, human-readable string (for Toasts/Alerts).
-      details: Array.isArray(message) ? message : null, // The full array of errors (for marking specific form fields)
-    });
+
+    const resp: AppResponse = {
+      success: false,
+      data: null,
+      error: {
+        statusCode: status,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        method: request.method,
+        message: Array.isArray(message) ? message[0] : message, // A single, human-readable string (for Toasts/Alerts).
+        details: Array.isArray(message) ? message : null, // The full array of errors (for marking specific form fields)
+      },
+    };
+    response.status(status).json(resp);
   }
 }

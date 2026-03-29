@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { MongooseError, Error, mongo } from "mongoose";
+import { AppResponse } from "../types";
 
 @Catch(MongooseError, mongo.MongoServerError)
 export class MongoExceptionFilter implements ExceptionFilter {
@@ -98,14 +99,18 @@ export class MongoExceptionFilter implements ExceptionFilter {
       `\n Status: ${status} \n Error: ${JSON.stringify(message)} \n Path: ${request.url}`,
     );
     this.logger.error(`\n Exeption text ${JSON.stringify(exception)}`);
-
-    response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      message,
-      details: `Mongoose or MongoDB error. Error type: ${errorType}`,
-    });
+    const resp: AppResponse = {
+      success: false,
+      data: null,
+      error: {
+        statusCode: status,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        method: request.method,
+        message,
+        details: `Mongoose or MongoDB error. Error type: ${errorType}`,
+      },
+    };
+    response.status(status).json(resp);
   }
 }

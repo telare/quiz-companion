@@ -29,7 +29,7 @@ export class UserController {
   @ApiOperation({ summary: "Find users" })
   @ApiResponse({ status: 200, type: User })
   @ApiResponse({ status: 400, description: "Validation failed" })
-  @ApiResponse({ status: 404, description: "User not found" })
+  @ApiResponse({ status: 404, description: "Users not found" })
   @Get()
   async findMany() {
     return await this.userService.findAll();

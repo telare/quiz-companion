@@ -3,10 +3,11 @@ import eslint from "@eslint/js";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
 
-export default [
+export default defineConfig([
   {
-    ignores: ["eslint.config.mjs"],
+    ignores: ["eslint.config.mjs", "**/*.spec.ts", "**/*.test.ts"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -25,4 +26,11 @@ export default [
       },
     },
   },
-];
+
+  {
+    files: ["**/*.spec.ts", "**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/unbound-method": "off",
+    },
+  },
+]);
