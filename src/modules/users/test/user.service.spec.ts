@@ -15,7 +15,7 @@ const mockUserModel = {
   findById: jest.fn(),
   findOne: jest.fn(),
   findByIdAndDelete: jest.fn(),
-  findOneAndUpdate: jest.fn(),
+  findByIdAndUpdate: jest.fn(),
 };
 
 describe("UserService", () => {
@@ -124,7 +124,7 @@ describe("UserService", () => {
 
   it("updateOne() should return the user with updated field", async () => {
     const newUserName = "username";
-    mockUserModel.findOneAndUpdate.mockReturnValue({
+    mockUserModel.findByIdAndUpdate.mockReturnValue({
       exec: jest.fn().mockResolvedValue({
         ...userInput,
         username: newUserName,
@@ -140,7 +140,7 @@ describe("UserService", () => {
   });
 
   it("updateOne() should throw NotFoundException when the user doesn't exist", async () => {
-    mockUserModel.findOneAndUpdate.mockReturnValue({
+    mockUserModel.findByIdAndUpdate.mockReturnValue({
       exec: jest.fn().mockResolvedValue(null),
     });
 

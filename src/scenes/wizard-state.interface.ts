@@ -11,6 +11,7 @@ export interface MyWizardState extends Scenes.WizardSessionData {
   userName?: string;
   userId?: string;
   topic?: TopicTitle;
+  mode?: "popular";
   totalPoints?: number;
   difficulty?: Difficulty;
   rank?: UserRank;

@@ -8,6 +8,8 @@ import {
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AppResponse } from "../types";
+import { TelegrafArgumentsHost, TelegrafContextType } from "nestjs-telegraf";
+import { BotContext } from "../../bot.context";
 
 interface NestErrorResponse {
   message: string | string[];
@@ -26,7 +28,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+    const hostType = host.getType();
+    if (hostType === ("telegraf" as unknown as TelegrafContextType)) {
+      const telegrafHost = TelegrafArgumentsHost.create(host);
+      const ctx = telegrafHost.getContext<BotContext>();
 
+      console.error("Bot Error:", exception);
+
+      return ctx.reply(
+        "❌ An unexpected error occurs. Please, try again later",
+      );
+    }
     /*
      * NestJS errors come in two "shapes":
      * 1. Simple String: throw new ForbiddenException('No access') -> "No access"

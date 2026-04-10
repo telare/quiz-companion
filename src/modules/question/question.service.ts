@@ -205,6 +205,19 @@ export class QuestionService {
     ]);
   }
 
+  async findManyPopularQuestionsByCategory(
+    category: Question["category"],
+    difficulty: Question["difficulty"],
+    limit: number,
+  ): Promise<HydratedDocument<Question>[]> {
+    return this.questionModel.aggregate([
+      {
+        $match: { category, isPopular: true, difficulty },
+      },
+      { $limit: limit },
+    ]);
+  }
+
   async buildQuestion({
     userId,
     questionData,

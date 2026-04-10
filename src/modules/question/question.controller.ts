@@ -7,12 +7,14 @@ import {
   ParseArrayPipe,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { QuestionService } from "./question.service";
 import { CreateQuestionDTO } from "./dto/create-question.dto";
 import { UpdateQuestionDto } from "./dto/update-question.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+import { Question } from "./entities/question.entity";
 
 @ApiTags("Questions")
 @Controller("questions")
@@ -30,6 +32,27 @@ export class QuestionController {
   @Get(":id")
   async getOne(@Param("id") id: string) {
     return await this.questionService.findById(id);
+  }
+
+  @ApiOperation({ summary: "Get popular questions" })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: "",
+    },
+  })
+  @Get("/:category/:difficulty")
+  async getAllPopularByCategory(
+    @Param("category") category: Question["category"],
+    @Param("difficulty") difficulty: Question["difficulty"],
+    @Query("limit") limit: number,
+  ) {
+    return await this.questionService.findManyPopularQuestionsByCategory(
+      category,
+      difficulty,
+      limit,
+    );
   }
 
   @ApiOperation({ summary: "Get all questions" })

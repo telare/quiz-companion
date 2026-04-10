@@ -20,6 +20,11 @@ export class QuizCommand {
     await ctx.scene.enter(WIZARD_KEYS.quiz);
   }
 
+  @Command("popular_quiz")
+  async handleStartPopularQuiz(@Ctx() ctx: Scenes.SceneContext) {
+    await ctx.scene.enter(WIZARD_KEYS.quiz, { mode: "popular" });
+  }
+
   @Command("saved")
   @Hears(/📌 Show saved/)
   async handleSavedQuestions(@Ctx() ctx: BotContext) {

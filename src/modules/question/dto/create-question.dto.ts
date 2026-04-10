@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsEnum,
   IsOptional,
+  IsBoolean,
 } from "class-validator";
 
 import { ApiProperty } from "@nestjs/swagger";
@@ -66,4 +67,8 @@ export class CreateQuestionDTO {
 
   @IsString()
   explanation: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPopular?: boolean;
 }

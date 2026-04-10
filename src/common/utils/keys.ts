@@ -10,4 +10,5 @@ export type EvnKey = keyof typeof ENV_KEYS;
 
 export const WIZARD_KEYS = {
   quiz: "QUIZ_WIZARD",
+  popular: "POPULAR_QUIZ_WIZARD",
 };

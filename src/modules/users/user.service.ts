@@ -58,11 +58,7 @@ export class UserService {
     newUserInfo: Partial<User>,
   ): Promise<HydratedDocument<User>> {
     const updatedOne = await this.userModel
-      .findOneAndUpdate(
-        { _id: id },
-        { ...newUserInfo },
-        { returnDocument: "after" },
-      )
+      .findByIdAndUpdate(id, { ...newUserInfo }, { returnDocument: "after" })
       .exec();
 
     if (!updatedOne) {
@@ -82,17 +78,17 @@ export class UserService {
     return deleted;
   }
 
-  async incrementPoints(userName: string, amount: number) {
+  async incrementPoints(userId: string, amount: number) {
     const updatedOne = await this.userModel
-      .findOneAndUpdate(
-        { username: userName },
+      .findByIdAndUpdate(
+        userId,
         { $inc: { totalPoints: amount } },
         { returnDocument: "after" },
       )
       .exec();
 
     if (!updatedOne) {
-      throw new NotFoundException(`User with name: ${userName} not found.`);
+      throw new NotFoundException(`User with id: ${userId} not found.`);
     }
     return updatedOne;
   }

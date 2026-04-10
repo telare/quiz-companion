@@ -112,6 +112,9 @@ export class Question {
 
   @Prop({ required: true })
   explanation: string;
+
+  @Prop({ required: false })
+  isPopular?: boolean;
 }
 
 export type QuestionDocument = Question & Document;
