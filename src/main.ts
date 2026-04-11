@@ -33,6 +33,7 @@ async function bootstrap() {
   );
 
   app.useGlobalPipes(new ValidationPipe());
+  app.enableShutdownHooks();
 
   const config = new DocumentBuilder()
     .setTitle('Quiz Companion API')

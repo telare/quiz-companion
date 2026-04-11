@@ -9,6 +9,7 @@ import { QuestionModule } from './modules/question/question.module';
 import { FavoriteQuestionModule } from './modules/favorite-question/favorite-question.module';
 import { LoggerMiddleware } from './common/loggers';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     QuestionModule,
     FavoriteQuestionModule,
     BotModule,
+    HealthModule,
   ],
 })
 export class AppModule implements NestModule {

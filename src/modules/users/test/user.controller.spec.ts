@@ -1,9 +1,9 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { UserService } from "../user.service";
-import { UserController } from "../user.controller";
-import { userStub } from "./user.stubs";
-import { CreateUserDto } from "../dto/create-user.dto";
-import mongoose from "mongoose";
+import { Test, TestingModule } from '@nestjs/testing';
+import { UserService } from '../user.service';
+import { UserController } from '../user.controller';
+import { userStub } from './user.stubs';
+import { CreateUserDto } from '../dto/create-user.dto';
+import mongoose from 'mongoose';
 
 const mockUserService = {
   findOne: jest.fn(),
@@ -14,7 +14,7 @@ const mockUserService = {
   removeOne: jest.fn(),
 };
 
-describe("UserController", () => {
+describe('UserController', () => {
   let controller: UserController;
   let service: UserService;
   let userInput: CreateUserDto;
@@ -37,7 +37,7 @@ describe("UserController", () => {
     userInput = userStub();
   });
 
-  it("POST users/ should create new user", async () => {
+  it('POST users/ should create new user', async () => {
     const id = new mongoose.Types.ObjectId().toString();
     mockUserService.create.mockResolvedValue({
       ...userInput,
@@ -49,7 +49,7 @@ describe("UserController", () => {
     expect(service.create).toHaveBeenCalledWith(userInput);
   });
 
-  it("GET users/:id should return a user by id", async () => {
+  it('GET users/:id should return a user by id', async () => {
     mockUserService.findOne.mockResolvedValue({
       ...userInput,
       id: userInputId,
@@ -58,7 +58,7 @@ describe("UserController", () => {
     expect(service.findOne).toHaveBeenCalledWith(userInputId);
   });
 
-  it("POST users/bulk should create new users", async () => {
+  it('POST users/bulk should create new users', async () => {
     const users: CreateUserDto[] = [
       {
         rank: userInput.rank,
@@ -68,7 +68,7 @@ describe("UserController", () => {
       {
         rank: userInput.rank,
         totalPoints: userInput.totalPoints,
-        username: "test-user-2",
+        username: 'test-user-2',
       },
     ];
     mockUserService.createMany.mockReturnValue(users);
@@ -85,7 +85,7 @@ describe("UserController", () => {
     expect(service.createMany).toHaveBeenCalledWith(users);
   });
 
-  it("DELETE users/:id should delete the user by id", async () => {
+  it('DELETE users/:id should delete the user by id', async () => {
     mockUserService.removeOne.mockResolvedValue({
       ...userInput,
       id: userInputId,

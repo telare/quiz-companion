@@ -1,13 +1,13 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { UserService } from "../user.service";
-import { getModelToken, MongooseModule } from "@nestjs/mongoose";
-import { NotFoundException } from "@nestjs/common";
-import { mongo } from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { userStub } from "./user.stubs";
-import { User } from "../entities/user.entity";
-import mongoose from "mongoose";
-import { CreateUserDto } from "../dto/create-user.dto";
+import { Test, TestingModule } from '@nestjs/testing';
+import { UserService } from '../user.service';
+import { getModelToken, MongooseModule } from '@nestjs/mongoose';
+import { NotFoundException } from '@nestjs/common';
+import { mongo } from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { userStub } from './user.stubs';
+import { User } from '../entities/user.entity';
+import mongoose from 'mongoose';
+import { CreateUserDto } from '../dto/create-user.dto';
 
 const mockUserModel = {
   create: jest.fn(),
@@ -18,7 +18,7 @@ const mockUserModel = {
   findByIdAndUpdate: jest.fn(),
 };
 
-describe("UserService", () => {
+describe('UserService', () => {
   let service: UserService;
   let mongoServer: MongoMemoryServer;
   let userInput: CreateUserDto;
@@ -53,7 +53,7 @@ describe("UserService", () => {
     await mongoose.connection.close();
   });
 
-  it("create() should successfully create a user", async () => {
+  it('create() should successfully create a user', async () => {
     // mock setup - map with the result of await this.userModel.create(user);
     mockUserModel.create.mockResolvedValue({
       ...userInput,
@@ -66,8 +66,8 @@ describe("UserService", () => {
     expect(result._id).toEqual(userInputId);
   });
 
-  it("create() should propagate a Duplicate Key error from Mongoose", async () => {
-    const mockError = new mongo.MongoServerError({ message: "Duplicate key" });
+  it('create() should propagate a Duplicate Key error from Mongoose', async () => {
+    const mockError = new mongo.MongoServerError({ message: 'Duplicate key' });
     mockError.code = 11000;
 
     mockUserModel.create.mockRejectedValue(mockError);
@@ -77,7 +77,7 @@ describe("UserService", () => {
     );
   });
 
-  it("findOne() should return a user by id", async () => {
+  it('findOne() should return a user by id', async () => {
     mockUserModel.findById.mockReturnValue({
       exec: jest.fn().mockResolvedValue({
         ...userInput,
@@ -94,12 +94,12 @@ describe("UserService", () => {
     mockUserModel.findById.mockReturnValue({
       exec: jest.fn().mockResolvedValue(null),
     });
-    await expect(service.findOne("non-existent-id")).rejects.toThrow(
+    await expect(service.findOne('non-existent-id')).rejects.toThrow(
       NotFoundException,
     );
   });
 
-  it("findByName() should return the user by username", async () => {
+  it('findByName() should return the user by username', async () => {
     mockUserModel.findOne.mockReturnValue({
       exec: jest.fn().mockResolvedValue({
         ...userInput,
@@ -117,13 +117,13 @@ describe("UserService", () => {
       exec: jest.fn().mockResolvedValue(null),
     });
 
-    await expect(service.findOne("non-existent-name")).rejects.toThrow(
+    await expect(service.findOne('non-existent-name')).rejects.toThrow(
       NotFoundException,
     );
   });
 
-  it("updateOne() should return the user with updated field", async () => {
-    const newUserName = "username";
+  it('updateOne() should return the user with updated field', async () => {
+    const newUserName = 'username';
     mockUserModel.findByIdAndUpdate.mockReturnValue({
       exec: jest.fn().mockResolvedValue({
         ...userInput,
@@ -145,11 +145,11 @@ describe("UserService", () => {
     });
 
     await expect(
-      service.updateOne(userInput.username, { username: "username" }),
+      service.updateOne(userInput.username, { username: 'username' }),
     ).rejects.toThrow(NotFoundException);
   });
 
-  it("removeOne() should return deleted user", async () => {
+  it('removeOne() should return deleted user', async () => {
     mockUserModel.findByIdAndDelete.mockReturnValue({
       exec: jest.fn().mockResolvedValue({ ...userInput, _id: userInputId }),
     });
