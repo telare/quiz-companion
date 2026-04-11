@@ -1,6 +1,6 @@
 {
   "name": "quiz-companion-telegram-bot",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A Telegram bot that serves as a quiz companion, providing users with quizzes, trivia, and educational content to enhance their learning experience.",
   "author": "",
   "private": true,

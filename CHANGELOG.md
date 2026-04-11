@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.5](https://github.com/telare/quiz-companion/compare/v0.0.4...v0.0.5) (2026-04-11)
+
+
+### Features
+
+* add path logging in server startup messages ([cf3e2bc](https://github.com/telare/quiz-companion/commit/cf3e2bcb9288f214532800207affbae813da9610))
+* add perfectionist eslint plugin and set up sorting ([a9d9a62](https://github.com/telare/quiz-companion/commit/a9d9a62402bb15037812a9310382299c40accc05))
+* add terminus health check module ([e0bc5be](https://github.com/telare/quiz-companion/commit/e0bc5be4600967fbbd0533d39b0b6ef52975644f))
+* add throttling functionality with @nestjs/throttler and swagger-ui-express ([0fcee9c](https://github.com/telare/quiz-companion/commit/0fcee9c936e4051b1784bc8c1054a4473cd2885c))
+* code style changes ([59baf4f](https://github.com/telare/quiz-companion/commit/59baf4f97b23ed725cd3ba65cd1cfa80324a694c))
+* enhance bot functionality with new commands and keyboard replies ([9eccc99](https://github.com/telare/quiz-companion/commit/9eccc99d6602ee515e28b959e4c5ab867bbf6143))
+* enhance quiz functionality with popular mode, improve UX in error handling ([0fb71d4](https://github.com/telare/quiz-companion/commit/0fb71d46b27d6afb306af1c7f8bd0b3090a76991))
+* enhance swagger API documentation ([c1b051b](https://github.com/telare/quiz-companion/commit/c1b051b9b159fea6c3efcd9043f5500fd1b1c24b))
+* Enhanced Error Handling & Question Generation Logic ([f813fa8](https://github.com/telare/quiz-companion/commit/f813fa8636f363b3fe36ebcdb4d9fd7a4dac2e8e))
+* implement global exception filter and update related imports ([5c8f183](https://github.com/telare/quiz-companion/commit/5c8f183cff0f0d1559753c3dc7ce58da4fa36544))
+* implement tests for User, enhance error handling and response structure across application ([e4f6dcd](https://github.com/telare/quiz-companion/commit/e4f6dcd86d326e02f2819832b9c3c9836224a58c))
+* implement user CRUD operations ([f96a118](https://github.com/telare/quiz-companion/commit/f96a1188aa1a53c69af3e7bc2a75adfd58c371a1))
+* update eslint, ts configurations ([8e282f2](https://github.com/telare/quiz-companion/commit/8e282f23d6a2e57d18721134e268bce5cf89289e))
+
+
+### Bug Fixes
+
+* enhance logging interceptor and update question generation rules ([8707ee5](https://github.com/telare/quiz-companion/commit/8707ee591355e3e9ba5d16b410070abee1c2596c))
+* question DTO structure & generation script ([7f5c6c5](https://github.com/telare/quiz-companion/commit/7f5c6c50d1454a565ca83fa178998ed166c0a097))
+* refine question generation rules and update prompt template ([129dca7](https://github.com/telare/quiz-companion/commit/129dca71b8b599c4718672e9bf1980643fe120dd))
+* typo in utils ([dc93eef](https://github.com/telare/quiz-companion/commit/dc93eeff4ac996a9cb8a94c00e6bf653b8b65991))
+* update import paths ([c34eb0a](https://github.com/telare/quiz-companion/commit/c34eb0abc1ea2eeae057f3d2baeeafa10a0b4e5a))
+* update vercel configuration to include swagger-ui-dist files ([c364e1d](https://github.com/telare/quiz-companion/commit/c364e1dabcbd031f1a7ea8c31cad9a7c1de32807))
+
 ### [0.0.4](https://github.com/telare/quiz-companion/compare/v0.0.3...v0.0.4) (2026-03-20)
 
 ### Features
