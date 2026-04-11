@@ -3,21 +3,21 @@ import {
   Injectable,
   Logger,
   ServiceUnavailableException,
-} from "@nestjs/common";
-import { GoogleGenAI } from "@google/genai";
-import { Question } from "../question/entities/question.entity";
+} from '@nestjs/common';
+import { GoogleGenAI } from '@google/genai';
+import { Question } from '../question/entities/question.entity';
 
-const AI_MODEL = "gemini-2.5-flash";
-const RESPONSE_TYPE = "application/json";
+const AI_MODEL = 'gemini-2.5-flash';
+const RESPONSE_TYPE = 'application/json';
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   constructor(
-    @Inject("AI_CLIENT")
+    @Inject('AI_CLIENT')
     private readonly googleGenAI: GoogleGenAI,
   ) {}
 
-  private getPrompt(topic: string = "promises", difficulty: string = "middle") {
+  private getPrompt(topic: string = 'promises', difficulty: string = 'middle') {
     return `Act as a Senior Technical Interviewer. Your task is to generate high-quality JavaScript interview questions designed for a Telegram Quiz Bot.
 
 Generate a JSON object based on the topic: ${topic} at the following difficulty level: ${difficulty}.
@@ -58,14 +58,14 @@ Structure:
         },
       });
       if (!resp.text) {
-        throw new ServiceUnavailableException("Empty response from Gemini");
+        throw new ServiceUnavailableException('Empty response from Gemini');
       }
 
       //fix
       const questionData: Question = JSON.parse(resp.text) as Question;
 
       if (!questionData) {
-        throw new ServiceUnavailableException("Error in response of the AI");
+        throw new ServiceUnavailableException('Error in response of the AI');
       }
 
       return questionData;

@@ -1,1 +1,1 @@
-export * from "./AppResponse";
+export * from './AppResponse';

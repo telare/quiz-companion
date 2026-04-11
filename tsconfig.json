@@ -1,23 +1,29 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "types": ["jest"],
-    "declaration": true,
+    "types": ["jest", "node"],
     "removeComments": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
+
+    "declaration": false,
+    "skipLibCheck": true,
     "sourceMap": true,
+
+    "module": "nodenext",
+    "target": "esnext",
+    "rootDir": "./src",
     "outDir": "./dist",
+
+    "strict": true,
     "strictPropertyInitialization": false,
     "incremental": true,
-    "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "strict": true,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -3,13 +3,13 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-} from "@nestjs/common";
-import { tap } from "rxjs/operators";
+} from '@nestjs/common';
+import { tap } from 'rxjs/operators';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
-    console.log("Before...");
+    console.log('Before...');
 
     const className = context.getClass().name;
     const methodName = context.getHandler().name;

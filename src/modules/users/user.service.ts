@@ -2,10 +2,10 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { HydratedDocument, Model } from "mongoose";
-import { User } from "./entities/user.entity";
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { HydratedDocument, Model } from 'mongoose';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -19,7 +19,7 @@ export class UserService {
 
   async createMany(users: User[]): Promise<HydratedDocument<User>[]> {
     if (users.length === 0) {
-      throw new BadRequestException("No users provided for creation.");
+      throw new BadRequestException('No users provided for creation.');
     }
 
     const insertedUsers = await this.userModel.create(users);
@@ -31,7 +31,7 @@ export class UserService {
     const users = await this.userModel.find().exec();
 
     if (users.length === 0) {
-      throw new NotFoundException("No users found in the database.");
+      throw new NotFoundException('No users found in the database.');
     }
 
     return users;
@@ -58,7 +58,7 @@ export class UserService {
     newUserInfo: Partial<User>,
   ): Promise<HydratedDocument<User>> {
     const updatedOne = await this.userModel
-      .findByIdAndUpdate(id, { ...newUserInfo }, { returnDocument: "after" })
+      .findByIdAndUpdate(id, { ...newUserInfo }, { returnDocument: 'after' })
       .exec();
 
     if (!updatedOne) {
@@ -83,7 +83,7 @@ export class UserService {
       .findByIdAndUpdate(
         userId,
         { $inc: { totalPoints: amount } },
-        { returnDocument: "after" },
+        { returnDocument: 'after' },
       )
       .exec();
 

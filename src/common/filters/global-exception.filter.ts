@@ -5,11 +5,11 @@ import {
   HttpException,
   Logger,
   HttpStatus,
-} from "@nestjs/common";
-import { Request, Response } from "express";
-import { AppResponse } from "../types";
-import { TelegrafArgumentsHost, TelegrafContextType } from "nestjs-telegraf";
-import { BotContext } from "../../bot.context";
+} from '@nestjs/common';
+import { Request, Response } from 'express';
+import { AppResponse } from '../types';
+import { TelegrafArgumentsHost, TelegrafContextType } from 'nestjs-telegraf';
+import { BotContext } from '../../bot.context';
 
 interface NestErrorResponse {
   message: string | string[];
@@ -19,7 +19,7 @@ interface NestErrorResponse {
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger("GlobalError");
+  private readonly logger = new Logger('GlobalError');
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -29,14 +29,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
     const hostType = host.getType();
-    if (hostType === ("telegraf" as unknown as TelegrafContextType)) {
+    if (hostType === ('telegraf' as unknown as TelegrafContextType)) {
       const telegrafHost = TelegrafArgumentsHost.create(host);
       const ctx = telegrafHost.getContext<BotContext>();
 
-      console.error("Bot Error:", exception);
+      console.error('Bot Error:', exception);
 
       return ctx.reply(
-        "❌ An unexpected error occurs. Please, try again later",
+        '❌ An unexpected error occurs. Please, try again later',
       );
     }
     /*
@@ -47,7 +47,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException
         ? exception.getResponse()
-        : "Internal error";
+        : 'Internal error';
     /**
      * STEP: Extraction
      * If exceptionResponse is an object, it's a built-in Nest error (like Validation).
@@ -55,7 +55,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
      * Otherwise, it's just a raw string we can use directly.
      */
     const message =
-      typeof exceptionResponse === "object"
+      typeof exceptionResponse === 'object'
         ? (exceptionResponse as NestErrorResponse).message
         : exceptionResponse;
     this.logger.error(

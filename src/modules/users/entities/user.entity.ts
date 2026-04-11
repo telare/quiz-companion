@@ -1,14 +1,14 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
 export enum UserRank {
-  "Iron" = "Iron",
-  "Bronze" = "Bronze",
-  "Silver" = "Silver",
-  "Gold" = "Gold",
-  "Platinum" = "Platinum",
-  "Diamond" = "Diamond",
-  "Master" = "Master",
+  'Iron' = 'Iron',
+  'Bronze' = 'Bronze',
+  'Silver' = 'Silver',
+  'Gold' = 'Gold',
+  'Platinum' = 'Platinum',
+  'Diamond' = 'Diamond',
+  'Master' = 'Master',
 }
 
 @Schema({ timestamps: true })

@@ -1,9 +1,9 @@
-import { Ctx, Start, Update } from "nestjs-telegraf";
-import { UserService } from "../../users/user.service";
-import { BotService } from "../bot.service";
-import { BotContext } from "../../../bot.context";
-import { AVAILABLE_COMMANDS } from "../../../common/utils";
-import { UserRank } from "../../users/entities/user.entity";
+import { Ctx, Start, Update } from 'nestjs-telegraf';
+import { UserService } from '../../users/user.service';
+import { BotService } from '../bot.service';
+import { BotContext } from '../../../bot.context';
+import { AVAILABLE_COMMANDS } from '../../../common/utils';
+import { UserRank } from '../../users/entities/user.entity';
 
 @Update()
 export class StartCommand {
@@ -18,7 +18,7 @@ export class StartCommand {
 
     if (!username) {
       return await ctx.reply(
-        "Hi user! What do you want to do? /help to get more info",
+        'Hi user! What do you want to do? /help to get more info',
       );
     }
 
@@ -32,16 +32,16 @@ export class StartCommand {
     await ctx.reply(
       [
         `👋 <b>Welcome, @${username}!</b>`,
-        "",
+        '',
         "I'm your <b>Quiz Master Bot</b>. I can help you test your knowledge on various programming topics.",
-        "",
+        '',
         `🚀 To begin a quiz, use the ${AVAILABLE_COMMANDS.quiz} command.`,
         `📊 To see your profile, use ${AVAILABLE_COMMANDS.my}.`,
         `💡 For a list of all commands, use ${AVAILABLE_COMMANDS.help}.`,
-        "You can also use buttons at the bottom!",
+        'You can also use buttons at the bottom!',
         "Let's start learning!",
-      ].join("\n"),
-      { parse_mode: "HTML" },
+      ].join('\n'),
+      { parse_mode: 'HTML' },
     );
   }
 }

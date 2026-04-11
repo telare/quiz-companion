@@ -1,37 +1,37 @@
-import { Controller, Get, Post, Body, Param, Query } from "@nestjs/common";
-import { FavoriteQuestionService } from "./favorite-question.service";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { FavoriteQuestionService } from './favorite-question.service';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@ApiTags("Favorite Questions")
-@Controller("favorites")
+@ApiTags('Favorite Questions')
+@Controller('favorites')
 export class FavoriteQuestionController {
   constructor(private readonly favoriteService: FavoriteQuestionService) {}
 
-  @ApiOperation({ summary: "Get all favorite questions of a user" })
+  @ApiOperation({ summary: 'Get all favorite questions of a user' })
   @ApiResponse({
     status: 200,
     example: {
       success: true,
-      data: "",
+      data: '',
     },
   })
   @Get()
-  async findAll(@Query("userId") userId: string) {
+  async findAll(@Query('userId') userId: string) {
     return await this.favoriteService.findAll(userId);
   }
 
-  @ApiOperation({ summary: "Post a favorite question" })
+  @ApiOperation({ summary: 'Post a favorite question' })
   @ApiResponse({
     status: 200,
     example: {
       success: true,
-      data: "",
+      data: '',
     },
   })
-  @Post(":questionId")
+  @Post(':questionId')
   async createOne(
-    @Param("questionId") questionId: string,
-    @Body("userId") userId: string,
+    @Param('questionId') questionId: string,
+    @Body('userId') userId: string,
   ) {
     return await this.favoriteService.create({
       questionId,

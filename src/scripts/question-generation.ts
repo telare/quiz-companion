@@ -1,6 +1,6 @@
-import "dotenv/config";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Category } from "../modules/question/entities/question.entity";
+import 'dotenv/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Category } from '../modules/question/entities/question.entity';
 
 interface Question {
   topicTitle: string;
@@ -18,36 +18,36 @@ type DomainType = keyof typeof DOMAINS;
 const AI_STUDIO_KEY = process.env.GOOGLE_AI_STUDIO_API_KEY;
 const QUIZ_API_ENDPOINT = process.env.QUIZ_API_ENDPOINT;
 if (!AI_STUDIO_KEY || !QUIZ_API_ENDPOINT)
-  throw new Error("Misssing env variables");
+  throw new Error('Misssing env variables');
 
-const AI_MODEL = "gemini-2.5-flash";
-const RESPONSE_TYPE = "application/json";
+const AI_MODEL = 'gemini-2.5-flash';
+const RESPONSE_TYPE = 'application/json';
 const QUESTION_EXPLANATION_FIELD_CHAR_LIMIT = 230;
 const QUESTIONS_PER_BATCH = 2;
 
-const DIFFICULTIES = ["junior", "middle", "senior"];
+const DIFFICULTIES = ['junior', 'middle', 'senior'];
 const DOMAINS = {
   language: {
     topics: [
-      "Tenses",
-      "Articles",
-      "Prepositions",
-      "Conditionals",
-      "Modal Verbs",
-      "Passive Voice",
-      "Reported Speech",
-      "Relative Clauses",
-      "Conjunctions",
-      "Punctuation",
-      "Pronouns",
-      "Adjectives and Adverbs",
-      "Comparatives and Superlatives",
-      "Collocations",
-      "Word Order",
-      "Determiners",
-      "Countable and Uncountable Nouns",
-      "Cleft Sentences",
-      "Vocabulary in Context",
+      'Tenses',
+      'Articles',
+      'Prepositions',
+      'Conditionals',
+      'Modal Verbs',
+      'Passive Voice',
+      'Reported Speech',
+      'Relative Clauses',
+      'Conjunctions',
+      'Punctuation',
+      'Pronouns',
+      'Adjectives and Adverbs',
+      'Comparatives and Superlatives',
+      'Collocations',
+      'Word Order',
+      'Determiners',
+      'Countable and Uncountable Nouns',
+      'Cleft Sentences',
+      'Vocabulary in Context',
     ],
     difficulties: DIFFICULTIES,
     difficultyGuide: `
@@ -55,36 +55,36 @@ const DOMAINS = {
     - middle (B1-B2): exceptions, context-dependent rules, common mistakes.
     - senior (C1-C2): nuanced usage, formal/academic register, rare edge cases, native-speaker subtleties.`,
     optionsRule: `The "options" field must be an array of exactly 4 strings. For fill-in-the-blank: word/phrase choices. For error-correction: corrected sentence versions.`,
-    role: "Senior English Language Expert and Linguist",
+    role: 'Senior English Language Expert and Linguist',
   },
 
   programming: {
     topics: [
-      "Closures",
-      "Promises",
-      "Event Loop",
-      "Hoisting",
-      "Prototypes",
-      "Scopes",
-      "This Keyword",
-      "Async/Await",
-      "Generators",
-      "Garbage Collection",
-      "Classes",
-      "Destructuring",
-      "Map and Set",
-      "WeakMap",
-      "Proxy",
-      "Reflect",
-      "Modules",
-      "Strict Mode",
-      "Type Coercion",
-      "Symbols",
-      "Memory Management",
-      "Web APIs",
-      "DOM API",
-      "Design Patterns",
-      "Performance",
+      'Closures',
+      'Promises',
+      'Event Loop',
+      'Hoisting',
+      'Prototypes',
+      'Scopes',
+      'This Keyword',
+      'Async/Await',
+      'Generators',
+      'Garbage Collection',
+      'Classes',
+      'Destructuring',
+      'Map and Set',
+      'WeakMap',
+      'Proxy',
+      'Reflect',
+      'Modules',
+      'Strict Mode',
+      'Type Coercion',
+      'Symbols',
+      'Memory Management',
+      'Web APIs',
+      'DOM API',
+      'Design Patterns',
+      'Performance',
     ],
     difficulties: DIFFICULTIES,
     difficultyGuide: `
@@ -92,7 +92,7 @@ const DOMAINS = {
     - middle: edge cases, async behavior, tricky coercion, common bugs.
     - senior: engine internals, performance tradeoffs, spec-level subtleties.`,
     optionsRule: `The "options" field must be an array of exactly 4 strings. For predict_output: the exact console output. For code_completion: the missing code fragment.`,
-    role: "Senior Software Engineer and Technical Interviewer",
+    role: 'Senior Software Engineer and Technical Interviewer',
   },
 };
 
@@ -110,7 +110,7 @@ function getPrompt(
       `Unknown domain: "${domain}". Use "language" or "programming".`,
     );
 
-  const topicList = cfg.topics.join(", ");
+  const topicList = cfg.topics.join(', ');
 
   return `
 Act as a ${cfg.role} specializing in ${category}.
@@ -168,7 +168,7 @@ async function generateQuestion(
     const responseText = response.text();
 
     if (!responseText) {
-      throw new Error("Empty response from Gemini");
+      throw new Error('Empty response from Gemini');
     }
 
     const generatedQuestions = JSON.parse(responseText) as Question[];
@@ -185,10 +185,10 @@ async function generateQuestion(
 
 async function postToEndpoint(question: Question): Promise<Question> {
   const body = JSON.stringify(question);
-  console.log("[POST ENDPOINT FNC] request body:", body);
+  console.log('[POST ENDPOINT FNC] request body:', body);
 
-  const res = await fetch(QUIZ_API_ENDPOINT || "", {
-    method: "POST",
+  const res = await fetch(QUIZ_API_ENDPOINT || '', {
+    method: 'POST',
     body: JSON.stringify(question),
   });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -201,13 +201,13 @@ function validateQuestion(q: Question, domain: DomainType) {
   if (!cfg) throw new Error(`Unknown domain: "${domain}"`);
 
   const required = [
-    "questionText",
-    "topicTitle",
-    "difficulty",
-    "category",
-    "options",
-    "correctOptionIndex",
-    "explanation",
+    'questionText',
+    'topicTitle',
+    'difficulty',
+    'category',
+    'options',
+    'correctOptionIndex',
+    'explanation',
   ];
 
   for (const key of required) {
@@ -221,10 +221,10 @@ function validateQuestion(q: Question, domain: DomainType) {
     throw new Error(`Invalid difficulty: "${q.difficulty}"`);
 
   if (!Array.isArray(q.options) || q.options.length !== 4)
-    throw new Error("options must be an array of exactly 4 strings");
+    throw new Error('options must be an array of exactly 4 strings');
 
-  if (!q.options.every((o) => typeof o === "string"))
-    throw new Error("All options must be strings");
+  if (!q.options.every((o) => typeof o === 'string'))
+    throw new Error('All options must be strings');
 
   if (
     !Number.isInteger(q.correctOptionIndex) ||
@@ -234,7 +234,7 @@ function validateQuestion(q: Question, domain: DomainType) {
     throw new Error(`Invalid correctOptionIndex: ${q.correctOptionIndex}`);
 
   if (
-    typeof q.explanation !== "string" ||
+    typeof q.explanation !== 'string' ||
     q.explanation.length >= QUESTION_EXPLANATION_FIELD_CHAR_LIMIT
   )
     throw new Error(
@@ -260,8 +260,8 @@ function getCombos(category: Category, domain: DomainType) {
 }
 
 async function main() {
-  const englishCombos = getCombos(Category.ENGLISH, "language");
-  const jsCombos = getCombos(Category.JS, "programming");
+  const englishCombos = getCombos(Category.ENGLISH, 'language');
+  const jsCombos = getCombos(Category.JS, 'programming');
 
   console.log(
     `🚀 Starting generation for English: ${englishCombos.length} and JS: ${jsCombos.length} batches...`,
@@ -275,7 +275,7 @@ async function main() {
   );
   console.log(aiResults);
   const allQuestions = aiResults
-    .filter((r) => r.status === "fulfilled")
+    .filter((r) => r.status === 'fulfilled')
     .flatMap((r) => r.value);
   console.log(allQuestions);
   console.log(
@@ -294,7 +294,7 @@ async function main() {
       if (err instanceof Error) {
         console.warn(`❌ Skipping invalid question: ${err.message}`);
       }
-      console.log("Unhanled js!", err);
+      console.log('Unhanled js!', err);
     }
   }
 
@@ -306,9 +306,9 @@ async function main() {
   );
   const postResults = await Promise.allSettled(questionPostArr);
 
-  const successful = postResults.filter((r) => r.status === "fulfilled").length;
-  console.log(postResults.filter((r) => r.status === "rejected"));
-  const failed = postResults.filter((r) => r.status === "rejected").length;
+  const successful = postResults.filter((r) => r.status === 'fulfilled').length;
+  console.log(postResults.filter((r) => r.status === 'rejected'));
+  const failed = postResults.filter((r) => r.status === 'rejected').length;
 
   console.log(`--- Finished ---`);
   console.log(`Successfully Posted: ${successful}`);

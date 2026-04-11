@@ -7,22 +7,26 @@ import {
   IsEnum,
   IsOptional,
   IsBoolean,
-} from "class-validator";
+} from 'class-validator';
 
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Category,
   Difficulty,
   ENGLISH_TopicTitle,
   JS_TopicTitle,
-} from "../entities/question.entity";
+} from '../entities/question.entity';
 
 export class CreateQuestionDTO {
   @IsString()
   questionText: string;
 
   @ApiProperty({
-    description: "Choose a topic from either JS or English categories",
+    description: 'Choose a topic from either JS or English categories',
+    enumName: `[
+      ...Object.values(JS_TopicTitle),
+      ...Object.values(ENGLISH_TopicTitle),
+    ]`,
     enum: [
       ...Object.values(JS_TopicTitle),
       ...Object.values(ENGLISH_TopicTitle),
@@ -34,16 +38,18 @@ export class CreateQuestionDTO {
 
   @ApiProperty({
     enum: Difficulty,
+    enumName: 'Difficulty',
     example: Difficulty.JUNIOR,
-    description: "The difficulty level of the question",
+    description: 'The difficulty level of the question',
   })
   @IsEnum(Difficulty)
   difficulty: Difficulty;
 
   @ApiProperty({
     enum: Category,
+    enumName: 'Category',
     example: Category.ENGLISH,
-    description: "The category of the question",
+    description: 'The category of the question',
   })
   @IsEnum(Category)
   category: Category;

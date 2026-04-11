@@ -1,9 +1,9 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 import {
   DEFAULT_REPLY_KEYBOARD_MSG,
   REPLY_KEYBOARD_BUTTONS_TEXT,
-} from "../../common/utils";
-import { Context, Markup } from "telegraf";
+} from '../../common/utils';
+import { Context, Markup } from 'telegraf';
 
 @Injectable()
 export class BotService {

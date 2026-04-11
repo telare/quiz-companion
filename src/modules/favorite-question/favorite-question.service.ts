@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { CreateFavoriteQuestionDto } from "./dto/create-favorite-question.dto";
-import { InjectModel } from "@nestjs/mongoose";
-import { DeleteResult, HydratedDocument, Model } from "mongoose";
-import { Favorite } from "./entities/favorite-question.entity";
+import { Injectable } from '@nestjs/common';
+import { CreateFavoriteQuestionDto } from './dto/create-favorite-question.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { DeleteResult, HydratedDocument, Model } from 'mongoose';
+import { Favorite } from './entities/favorite-question.entity';
 
 @Injectable()
 export class FavoriteQuestionService {

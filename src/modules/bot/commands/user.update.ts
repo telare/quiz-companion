@@ -1,41 +1,41 @@
-import { Command, Ctx, Hears, Update } from "nestjs-telegraf";
-import { UserService } from "../../users/user.service";
-import { UseGuards } from "@nestjs/common";
-import { AuthGuard } from "../../../common/guards";
-import { BotContext } from "../../../bot.context";
+import { Command, Ctx, Hears, Update } from 'nestjs-telegraf';
+import { UserService } from '../../users/user.service';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../../../common/guards';
+import { BotContext } from '../../../bot.context';
 
 @UseGuards(AuthGuard)
 @Update()
 export class UserCommand {
   constructor(private readonly userService: UserService) {}
 
-  @Command("my")
+  @Command('my')
   @Hears(/📊 My Profile/)
   async getMyInfoCommand(@Ctx() ctx: BotContext) {
     const user = ctx.dbUser;
     if (!user) {
-      return await ctx.reply("User profile not found. Please use /start.");
+      return await ctx.reply('User profile not found. Please use /start.');
     }
 
     const message = [
-      "<b>📋 Your Profile:</b>",
-      "",
+      '<b>📋 Your Profile:</b>',
+      '',
       `🏷 <b>Username:</b> @${user.username}`,
       `✨ <b>Total Points:</b> <code>${user.totalPoints ?? 0}</code>`,
       `🏆 <b>Rank:</b> <code>${user.rank}</code>`,
-      "",
-      "Keep practicing to improve your score!",
-    ].join("\n");
+      '',
+      'Keep practicing to improve your score!',
+    ].join('\n');
 
-    await ctx.reply(message, { parse_mode: "HTML" });
+    await ctx.reply(message, { parse_mode: 'HTML' });
   }
 
-  @Command("ranking")
+  @Command('ranking')
   @Hears(/🏆 Ranking/)
   async getAppRanking(@Ctx() ctx: BotContext) {
     const users = await this.userService.findAll();
     if (!users || users.length === 0) {
-      return await ctx.reply("No users have been found.");
+      return await ctx.reply('No users have been found.');
     }
 
     const sortedUsers = users.sort(
@@ -48,10 +48,10 @@ export class UserCommand {
     );
 
     const rankingLines = sortedUsers.slice(0, 10).map((u, i) => {
-      let prefix = "";
-      if (i === 0) prefix = "🥇 ";
-      else if (i === 1) prefix = "🥈 ";
-      else if (i === 2) prefix = "🥉 ";
+      let prefix = '';
+      if (i === 0) prefix = '🥇 ';
+      else if (i === 1) prefix = '🥈 ';
+      else if (i === 2) prefix = '🥉 ';
       else prefix = `<b>${i + 1}.</b> `;
 
       const isMe = u.username === currentUser.username;
@@ -59,12 +59,12 @@ export class UserCommand {
       return isMe ? `👉 <b>${line}</b>` : line;
     });
 
-    let message = `<b>🏆 Global Leaderboard 🏆</b>\n\n${rankingLines.join("\n")}`;
+    let message = `<b>🏆 Global Leaderboard 🏆</b>\n\n${rankingLines.join('\n')}`;
 
     if (userRankIndex >= 10) {
       message += `\n...\n👉 <b>${userRankIndex + 1}. @${currentUser.username} — <code>${currentUser.totalPoints ?? 0}</code> pts</b>`;
     }
 
-    await ctx.reply(message, { parse_mode: "HTML" });
+    await ctx.reply(message, { parse_mode: 'HTML' });
   }
 }

@@ -4,9 +4,9 @@ import {
   ArgumentsHost,
   HttpException,
   Logger,
-} from "@nestjs/common";
-import { Request, Response } from "express";
-import { AppResponse } from "../types";
+} from '@nestjs/common';
+import { Request, Response } from 'express';
+import { AppResponse } from '../types';
 
 interface NestErrorResponse {
   message: string | string[];
@@ -16,7 +16,7 @@ interface NestErrorResponse {
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger("HttpError");
+  private readonly logger = new Logger('HttpError');
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -26,7 +26,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const exceptionResponse = exception.getResponse();
 
     const message =
-      typeof exceptionResponse === "object"
+      typeof exceptionResponse === 'object'
         ? (exceptionResponse as NestErrorResponse).message
         : exceptionResponse;
     this.logger.error(
@@ -43,7 +43,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         path: request.url,
         method: request.method,
         message,
-        details: "HTTP Error",
+        details: 'HTTP Error',
       },
     };
 

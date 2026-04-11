@@ -5,26 +5,26 @@ import {
   Action,
   Ctx,
   Hears,
-} from "nestjs-telegraf";
-import type { WizardSceenContext } from "../wizard-scene.context";
-import { Logger, UseGuards } from "@nestjs/common";
+} from 'nestjs-telegraf';
+import type { WizardSceenContext } from '../wizard-scene.context';
+import { Logger, UseGuards } from '@nestjs/common';
 import {
   DIFFICULTY_MULTIPLIERS,
   getErrorMessage,
   WIZARD_KEYS,
-} from "../../common/utils";
-import { BotService } from "../../modules/bot/bot.service";
-import { Markup } from "telegraf";
-import { MyWizardState, TopicTitle } from "../wizard-state.interface";
+} from '../../common/utils';
+import { BotService } from '../../modules/bot/bot.service';
+import { Markup } from 'telegraf';
+import { MyWizardState, TopicTitle } from '../wizard-state.interface';
 import {
   Category,
   Difficulty,
-} from "../../modules/question/entities/question.entity";
-import { AuthGuard } from "../../common/guards";
-import { QuestionService } from "../../modules/question/question.service";
-import { FavoriteQuestionService } from "../../modules/favorite-question/favorite-question.service";
-import { UserService } from "../../modules/users/user.service";
-import { UserRank } from "../../modules/users/entities/user.entity";
+} from '../../modules/question/entities/question.entity';
+import { AuthGuard } from '../../common/guards';
+import { QuestionService } from '../../modules/question/question.service';
+import { FavoriteQuestionService } from '../../modules/favorite-question/favorite-question.service';
+import { UserService } from '../../modules/users/user.service';
+import { UserRank } from '../../modules/users/entities/user.entity';
 
 /* 
 Core workflow logic:
@@ -72,7 +72,7 @@ export class QuizWizard {
     const questionData = await this.questionService.findById(current);
     if (!questionData) {
       this.logger.error(
-        "🛠️ INTERNAL ERROR: Missing question by id.\n\nPlease, contact the developer.",
+        '🛠️ INTERNAL ERROR: Missing question by id.\n\nPlease, contact the developer.',
         current,
       );
       return;
@@ -90,7 +90,7 @@ export class QuizWizard {
       questionData,
     });
     await ctx.reply(fullMessage, {
-      parse_mode: "HTML",
+      parse_mode: 'HTML',
       ...keyboard,
     });
   }
@@ -114,20 +114,20 @@ export class QuizWizard {
 
   @WizardStep(1)
   async onEnter(@Context() ctx: WizardSceenContext) {
-    await ctx.reply("Welcome!");
+    await ctx.reply('Welcome!');
     await this.botService.replyWithQuizKeyboard(ctx);
     try {
       const state = ctx.wizard.state as MyWizardState;
       const userName = ctx.from?.username;
       if (!userName) {
         await ctx.reply(
-          "No username provided. Please set a username in Telegram settings to use the quiz.",
+          'No username provided. Please set a username in Telegram settings to use the quiz.',
         );
         return;
       }
       const userInDb = await this.userService.findByName(userName);
       if (!userInDb) {
-        await ctx.reply("Please sign in.");
+        await ctx.reply('Please sign in.');
         return;
       }
       state.userId = userInDb._id.toString();
@@ -143,7 +143,7 @@ export class QuizWizard {
 
       if (!categories) {
         await ctx.reply(
-          "🛠️ INTERNAL ERROR: Service failed to retrieve technologies.\n\nPlease, contact the developer.",
+          '🛠️ INTERNAL ERROR: Service failed to retrieve technologies.\n\nPlease, contact the developer.',
         );
         return await ctx.scene.leave();
       }
@@ -152,7 +152,7 @@ export class QuizWizard {
         callbackData: `category:${cat._id}`,
       }));
       const keyboard = this.botService.createInlineKeyboard(keyboardData);
-      await ctx.reply("Pick any quiz category from suggested:", {
+      await ctx.reply('Pick any quiz category from suggested:', {
         ...keyboard,
       });
       ctx.wizard.next();
@@ -162,7 +162,7 @@ export class QuizWizard {
     }
   }
 
-  @Hears("🚫 Cancel Quiz")
+  @Hears('🚫 Cancel Quiz')
   async onQuizCancel(@Ctx() ctx: WizardSceenContext) {
     ctx.wizard.selectStep(7);
     return await this.onResults(ctx);
@@ -172,16 +172,16 @@ export class QuizWizard {
   @Action(/category:(.+)/)
   async onCategoryPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
-    if (!cbQuery || !("data" in cbQuery)) {
+    if (!cbQuery || !('data' in cbQuery)) {
       return await ctx.scene.leave();
     }
     const state = ctx.wizard.state as MyWizardState;
-    const [, category] = cbQuery.data.split(":");
+    const [, category] = cbQuery.data.split(':');
     state.category = category as Category;
 
     // early exit for popular quiz mode, skips topic selection and goes directly to difficulty selection
 
-    if (state.mode && state.mode === "popular") {
+    if (state.mode && state.mode === 'popular') {
       ctx.wizard.selectStep(2);
       return await this.onTopicPick(ctx);
     }
@@ -191,7 +191,7 @@ export class QuizWizard {
 
     if (!topics) {
       await ctx.reply(
-        "🛠️ INTERNAL ERROR: Service failed to retrieve question topics.\n\nPlease, contact the developer.",
+        '🛠️ INTERNAL ERROR: Service failed to retrieve question topics.\n\nPlease, contact the developer.',
       );
       return await ctx.scene.leave();
     }
@@ -203,7 +203,7 @@ export class QuizWizard {
       callbackData: `selectedTopic:${topic._id}`,
     }));
     const keyboard = this.botService.createInlineKeyboard(keyboardData);
-    await ctx.editMessageText("Pick any topic from the list below:", {
+    await ctx.editMessageText('Pick any topic from the list below:', {
       ...keyboard,
     });
 
@@ -214,14 +214,14 @@ export class QuizWizard {
   @Action(/selectedTopic:(.+)/)
   async onTopicPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
-    if (!cbQuery || !("data" in cbQuery)) {
+    if (!cbQuery || !('data' in cbQuery)) {
       return await ctx.scene.leave();
     }
     const state = ctx.wizard.state as MyWizardState;
 
     // if it is not popular mode, we need to set topic based on user's pick, otherwise we skip this step
-    if (!(state.mode && state.mode === "popular")) {
-      const [, topicName] = cbQuery.data.split(":");
+    if (!(state.mode && state.mode === 'popular')) {
+      const [, topicName] = cbQuery.data.split(':');
       state.topic = topicName as TopicTitle;
     }
 
@@ -234,7 +234,7 @@ export class QuizWizard {
     const keyboard = this.botService.createInlineKeyboard(
       difficultyLevelKeyboardData,
     );
-    await ctx.editMessageText("Pick difficulty level from the list below:", {
+    await ctx.editMessageText('Pick difficulty level from the list below:', {
       ...keyboard,
     });
     ctx.wizard.next();
@@ -245,22 +245,22 @@ export class QuizWizard {
   async onDifficultyPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
 
-    if (!cbQuery || !("data" in cbQuery)) {
+    if (!cbQuery || !('data' in cbQuery)) {
       return await ctx.scene.leave();
     }
 
     const state = ctx.wizard.state as MyWizardState;
-    const [, difficulty] = cbQuery.data.split(":");
+    const [, difficulty] = cbQuery.data.split(':');
     state.difficulty = difficulty as Difficulty;
 
-    const quizLengthKeyboardData = ["1", "5", "10"].map((qlength) => ({
+    const quizLengthKeyboardData = ['1', '5', '10'].map((qlength) => ({
       buttonText: qlength,
       callbackData: `quizLength:${qlength}`,
     }));
     const keyboard = this.botService.createInlineKeyboard(
       quizLengthKeyboardData,
     );
-    await ctx.editMessageText("Pick quiz length from the list below:", {
+    await ctx.editMessageText('Pick quiz length from the list below:', {
       ...keyboard,
     });
     ctx.wizard.next();
@@ -270,7 +270,7 @@ export class QuizWizard {
   @Action(/quizLength:(.+)/)
   async onLengthPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
-    if (!cbQuery || !("data" in cbQuery)) {
+    if (!cbQuery || !('data' in cbQuery)) {
       return;
     }
 
@@ -281,7 +281,7 @@ export class QuizWizard {
     await ctx.editMessageReplyMarkup(undefined);
 
     const state = ctx.wizard.state as MyWizardState;
-    const [, quizLength] = cbQuery.data.split(":");
+    const [, quizLength] = cbQuery.data.split(':');
 
     state.quizLength = Number(quizLength);
     const topic = state.topic;
@@ -291,14 +291,14 @@ export class QuizWizard {
     // throw error if no topic/difficulty/category selected & mode is !popular
     // in popular skip topic check, throw error if no difficulty/category selected
 
-    if (state.mode && state.mode === "popular") {
+    if (state.mode && state.mode === 'popular') {
       if (!difficulty || !category) {
         console.error(
-          "Missing difficulty/category selection in popular quiz mode",
+          'Missing difficulty/category selection in popular quiz mode',
           state,
         );
         await ctx.reply(
-          "🛠️ INTERNAL ERROR: Quiz ended.\nMissing difficulty/category selection.\n\nPlease, contact the developer.",
+          '🛠️ INTERNAL ERROR: Quiz ended.\nMissing difficulty/category selection.\n\nPlease, contact the developer.',
         );
 
         return ctx.scene.leave();
@@ -306,14 +306,14 @@ export class QuizWizard {
     } else {
       if (!topic || !difficulty || !category) {
         await ctx.reply(
-          "🛠️ INTERNAL ERROR: Quiz ended.\nMissing topic/difficulty/category selection.\n\nPlease, contact the developer.",
+          '🛠️ INTERNAL ERROR: Quiz ended.\nMissing topic/difficulty/category selection.\n\nPlease, contact the developer.',
         );
         return ctx.scene.leave();
       }
     }
     let questionData;
 
-    if (state.mode && state.mode === "popular") {
+    if (state.mode && state.mode === 'popular') {
       questionData =
         await this.questionService.findManyPopularQuestionsByCategory(
           category,
@@ -331,7 +331,7 @@ export class QuizWizard {
     }
     if (!questionData || questionData.length === 0) {
       await ctx.reply(
-        "Quiz ended. \nNo questions found for this topic/difficulty.\n\nPlease, contact the developer.",
+        'Quiz ended. \nNo questions found for this topic/difficulty.\n\nPlease, contact the developer.',
       );
       return ctx.scene.leave();
     }
@@ -355,11 +355,11 @@ export class QuizWizard {
       await ctx.answerCbQuery();
       const cbQuery = ctx.callbackQuery;
 
-      if (!cbQuery || !("data" in cbQuery)) {
+      if (!cbQuery || !('data' in cbQuery)) {
         return;
       }
 
-      const [, questionId, choice] = cbQuery.data.split(":");
+      const [, questionId, choice] = cbQuery.data.split(':');
 
       const question = await this.questionService.findById(questionId);
       if (!question) return;
@@ -370,7 +370,7 @@ export class QuizWizard {
       );
       if (!result) {
         await ctx.reply(
-          "🛠️ INTERNAL ERROR: Something went wrong while checking the question.\n\nPlease, contact the developer.",
+          '🛠️ INTERNAL ERROR: Something went wrong while checking the question.\n\nPlease, contact the developer.',
         );
         return ctx.scene.leave();
       }
@@ -391,7 +391,7 @@ export class QuizWizard {
         runStatistic.incorrect++;
       }
 
-      const statusEmoji = result.isCorrect ? "✅" : "❌";
+      const statusEmoji = result.isCorrect ? '✅' : '❌';
       const statusText = result.isCorrect
         ? `<b>Correct!</b> You've gained 1 point.`
         : `<b>Incorrect.</b> You've lost 1 point.`;
@@ -402,17 +402,17 @@ export class QuizWizard {
         `<b>💡 Correct answer:</b> <code>${result.correctAnswer}</code>`,
         `\n<b>📖 Explanation:</b>`,
         `<i>${result.explanation}</i>`,
-      ].join("\n");
+      ].join('\n');
       const isAlreadySaved = await this.favoriteService.findOne({
         userId,
         questionId,
       });
       const saveQuestionButton = {
-        buttonText: "⭐ Save question",
+        buttonText: '⭐ Save question',
         callbackData: `save:${questionId}`,
       };
       const unSaveButton = {
-        buttonText: "🗑 Remove from saved",
+        buttonText: '🗑 Remove from saved',
         callbackData: `unsave:${questionId}`,
       };
       const keyboard = this.botService.createInlineKeyboard([
@@ -424,7 +424,7 @@ export class QuizWizard {
       });
 
       await ctx.editMessageText(fullMessage + feedback, {
-        parse_mode: "HTML",
+        parse_mode: 'HTML',
         ...keyboard,
       });
 
@@ -474,29 +474,29 @@ export class QuizWizard {
       ? DIFFICULTY_MULTIPLIERS[difficulty]
       : 1;
     const details = [
-      `<b>Topic:</b> ${topic || ""}`,
-      `<b>Level:</b> ${difficulty || ""}`,
+      `<b>Topic:</b> ${topic || ''}`,
+      `<b>Level:</b> ${difficulty || ''}`,
       `<b>Level Multiplier:</b> x${difficultyMultiplier}`,
       `— — — — — — — — — — — —\n`,
-    ].join("\n");
+    ].join('\n');
 
     const stats = [
       `✅ <b>Correct:</b> <code>${correct}</code>`,
       `❌ <b>Incorrect:</b> <code>${incorrect}</code>`,
       `📊 <b>Accuracy:</b> <code>${percentage}%</code>`,
       `— — — — — — — — — — — —\n`,
-    ].join("\n");
+    ].join('\n');
 
     const finalScore = (correct - incorrect) * difficultyMultiplier;
     const newRank = this.getRank(totalPoints ?? 0);
     const footer = [
       `🏆 <b>Rank before:</b> ${rank}`,
       `🏆 <b>Ranl after:</b> ${newRank}`,
-      `✨ <b>Final score:</b> <code>${finalScore > 0 ? "+" : ""}${finalScore}</code>`,
+      `✨ <b>Final score:</b> <code>${finalScore > 0 ? '+' : ''}${finalScore}</code>`,
       `\n<i>Type /quiz to start a new session!</i>`,
     ]
       .filter(Boolean)
-      .join("\n");
+      .join('\n');
 
     const fullMessage = header + details + stats + footer;
 
@@ -510,12 +510,12 @@ export class QuizWizard {
     const shareText = `\n\n🎯 Just completed a ${topic} interview quiz!\n\n✅ Correct: ${correct}/${quizLength}\n📊 Accuracy: ${percentage}%\n🏆 Rank: ${newRank}\n\n💻 Think you can beat my score? Try it yourself!`;
 
     const keyboard = Markup.inlineKeyboard([
-      [Markup.button.switchToChat("Share my result ↗️", shareText)],
+      [Markup.button.switchToChat('Share my result ↗️', shareText)],
       // [Markup.button.callback("🔄 Try Again", "restart_quiz")],
     ]);
 
     await ctx.reply(fullMessage, {
-      parse_mode: "HTML",
+      parse_mode: 'HTML',
       ...keyboard,
     });
     await this.botService.replyWithStandardKeyboard(ctx);
