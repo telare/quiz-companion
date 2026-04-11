@@ -6,9 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { HydratedDocument, Model, MongooseError } from 'mongoose';
-import { UpdateQuestionDto } from './dto/update-question.dto';
-import { FavoriteQuestionService } from '../favorite-question/favorite-question.service';
+
 import { BotService } from '../bot/bot.service';
+import { FavoriteQuestionService } from '../favorite-question/favorite-question.service';
+import { UpdateQuestionDto } from './dto/update-question.dto';
 import { Category, Question } from './entities/question.entity';
 
 @Injectable()
@@ -145,11 +146,11 @@ export class QuestionService {
   async checkQuestion(
     questionId: string,
     userOptionIndex: number,
-  ): Promise<{
-    isCorrect: boolean;
+  ): Promise<null | {
     correctAnswer: string;
     explanation: string;
-  } | null> {
+    isCorrect: boolean;
+  }> {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
     if (!qinDb) {
       this.logger.warn(
@@ -222,8 +223,8 @@ export class QuestionService {
     userId,
     questionData,
   }: {
-    userId: string;
     questionData: HydratedDocument<Question>;
+    userId: string;
   }) {
     const questionId = questionData._id.toString();
     const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;

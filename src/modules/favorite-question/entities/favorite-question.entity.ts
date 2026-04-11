@@ -10,6 +10,6 @@ export class Favorite {
   savedAt: number;
 }
 
-export type FavoriteDocument = Favorite & Document;
+export type FavoriteDocument = Document & Favorite;
 
 export const FavoriteSchema = SchemaFactory.createForClass(Favorite);

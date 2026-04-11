@@ -1,21 +1,22 @@
 import { Module } from '@nestjs/common';
-import { TelegrafModule } from 'nestjs-telegraf';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { getConnectionToken } from '@nestjs/mongoose';
+import { Connection, ConnectionStates } from 'mongoose';
+import { TelegrafModule } from 'nestjs-telegraf';
+import { session } from 'telegraf-session-mongodb';
+
+import { getEnvValue } from '../../common/utils';
+import { QuizWizard } from '../../scenes/quiz/quiz.wizard';
 import { AiModule } from '../ai/ai.module';
-import { UsersModule } from '../users/user.module';
+import { FavoriteQuestionModule } from '../favorite-question/favorite-question.module';
 import { QuestionModule } from '../question/question.module';
-import { StartCommand } from './commands/start.update';
+import { UsersModule } from '../users/user.module';
+import { BotController } from './bot.controller';
+import { BotService } from './bot.service';
 import { HelpCommand } from './commands/help.update';
 import { QuizCommand } from './commands/quiz.update';
+import { StartCommand } from './commands/start.update';
 import { UserCommand } from './commands/user.update';
-import { BotService } from './bot.service';
-import { BotController } from './bot.controller';
-import { FavoriteQuestionModule } from '../favorite-question/favorite-question.module';
-import { getEnvValue } from '../../common/utils';
-import { session } from 'telegraf-session-mongodb';
-import { QuizWizard } from '../../scenes/quiz/quiz.wizard';
-import { Connection, ConnectionStates } from 'mongoose';
-import { getConnectionToken } from '@nestjs/mongoose';
 @Module({
   imports: [
     UsersModule,

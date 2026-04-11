@@ -1,3 +1,4 @@
+import { Logger, UseGuards } from '@nestjs/common';
 import {
   Wizard,
   WizardStep,
@@ -6,25 +7,26 @@ import {
   Ctx,
   Hears,
 } from 'nestjs-telegraf';
+import { Markup } from 'telegraf';
+
 import type { WizardSceenContext } from '../wizard-scene.context';
-import { Logger, UseGuards } from '@nestjs/common';
+
+import { AuthGuard } from '../../common/guards';
 import {
   DIFFICULTY_MULTIPLIERS,
   getErrorMessage,
   WIZARD_KEYS,
 } from '../../common/utils';
 import { BotService } from '../../modules/bot/bot.service';
-import { Markup } from 'telegraf';
-import { MyWizardState, TopicTitle } from '../wizard-state.interface';
+import { FavoriteQuestionService } from '../../modules/favorite-question/favorite-question.service';
 import {
   Category,
   Difficulty,
 } from '../../modules/question/entities/question.entity';
-import { AuthGuard } from '../../common/guards';
 import { QuestionService } from '../../modules/question/question.service';
-import { FavoriteQuestionService } from '../../modules/favorite-question/favorite-question.service';
-import { UserService } from '../../modules/users/user.service';
 import { UserRank } from '../../modules/users/entities/user.entity';
+import { UserService } from '../../modules/users/user.service';
+import { MyWizardState, TopicTitle } from '../wizard-state.interface';
 
 /* 
 Core workflow logic:
@@ -168,8 +170,8 @@ export class QuizWizard {
     return await this.onResults(ctx);
   }
 
-  @WizardStep(2)
   @Action(/category:(.+)/)
+  @WizardStep(2)
   async onCategoryPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
     if (!cbQuery || !('data' in cbQuery)) {
@@ -210,8 +212,8 @@ export class QuizWizard {
     ctx.wizard.next();
   }
 
-  @WizardStep(3)
   @Action(/selectedTopic:(.+)/)
+  @WizardStep(3)
   async onTopicPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
     if (!cbQuery || !('data' in cbQuery)) {
@@ -240,8 +242,8 @@ export class QuizWizard {
     ctx.wizard.next();
   }
 
-  @WizardStep(4)
   @Action(/difficulty:(.+)/)
+  @WizardStep(4)
   async onDifficultyPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
 
@@ -266,8 +268,8 @@ export class QuizWizard {
     ctx.wizard.next();
   }
 
-  @WizardStep(5)
   @Action(/quizLength:(.+)/)
+  @WizardStep(5)
   async onLengthPick(@Ctx() ctx: WizardSceenContext) {
     const cbQuery = ctx.callbackQuery;
     if (!cbQuery || !('data' in cbQuery)) {
@@ -348,8 +350,8 @@ export class QuizWizard {
     ctx.wizard.next();
   }
 
-  @WizardStep(6)
   @Action(/^quiz:/)
+  @WizardStep(6)
   async onAnswer(@Ctx() ctx: WizardSceenContext) {
     try {
       await ctx.answerCbQuery();

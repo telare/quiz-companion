@@ -9,12 +9,13 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { QuestionService } from './question.service';
-import { CreateQuestionDTO } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+
+import { CreateQuestionDTO } from './dto/create-question.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
 import { Question } from './entities/question.entity';
+import { QuestionService } from './question.service';
 
 @ApiTags('Questions')
 @Controller('questions')
@@ -81,7 +82,6 @@ export class QuestionController {
     return await this.questionService.createOne(question);
   }
 
-  @Throttle({ default: { limit: 60, ttl: 60000 } })
   @ApiOperation({ summary: 'Post many questions' })
   @ApiResponse({
     status: 200,
@@ -91,6 +91,7 @@ export class QuestionController {
     },
   })
   @Post('bulk')
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   async createMany(
     @Body(new ParseArrayPipe({ items: CreateQuestionDTO }))
     questions: CreateQuestionDTO[],

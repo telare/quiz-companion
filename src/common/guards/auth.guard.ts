@@ -1,5 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { TelegrafExecutionContext } from 'nestjs-telegraf';
+
 import { BotContext } from '../../bot.context';
 import { UserService } from '../../modules/users/user.service';
 

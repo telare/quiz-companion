@@ -1,5 +1,6 @@
-import { UserRank } from '../entities/user.entity';
 import { IsString, IsNumber, IsEnum } from 'class-validator';
+
+import { UserRank } from '../entities/user.entity';
 
 export class CreateUserDto {
   @IsString()

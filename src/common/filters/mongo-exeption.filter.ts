@@ -7,13 +7,14 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { MongooseError, Error, mongo } from 'mongoose';
+
 import { AppResponse } from '../types';
 
 @Catch(MongooseError, mongo.MongoServerError)
 export class MongoExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger('MongoError');
   catch(
-    exception: MongooseError | mongo.MongoServerError,
+    exception: mongo.MongoServerError | MongooseError,
     host: ArgumentsHost,
   ) {
     const ctx = host.switchToHttp();
@@ -40,19 +41,11 @@ export class MongoExceptionFilter implements ExceptionFilter {
     if (exception instanceof mongo.MongoServerError) {
       const code = exception.code;
       switch (code) {
-        case 11000:
-          status = HttpStatus.CONFLICT;
-          // const field = exception.keyPattern
-          //   ? Object.keys(exception.keyPattern)[0]
-          //   : "Field";
-          message = `Field already exists.`;
-          errorType = 'DuplicateKeyError';
-          break;
-
-        case 121:
+        case 2:
           status = HttpStatus.BAD_REQUEST;
-          message = 'Document validation failed at the database level.';
-          errorType = 'DocumentValidationFailure';
+          message =
+            'Invalid value or parameter passed to the database command.';
+          errorType = 'BadValueError';
           break;
 
         case 13:
@@ -74,11 +67,19 @@ export class MongoExceptionFilter implements ExceptionFilter {
           errorType = 'ExceededTimeLimit';
           break;
 
-        case 2:
+        case 121:
           status = HttpStatus.BAD_REQUEST;
-          message =
-            'Invalid value or parameter passed to the database command.';
-          errorType = 'BadValueError';
+          message = 'Document validation failed at the database level.';
+          errorType = 'DocumentValidationFailure';
+          break;
+
+        case 11000:
+          status = HttpStatus.CONFLICT;
+          // const field = exception.keyPattern
+          //   ? Object.keys(exception.keyPattern)[0]
+          //   : "Field";
+          message = `Field already exists.`;
+          errorType = 'DuplicateKeyError';
           break;
 
         case 11600:

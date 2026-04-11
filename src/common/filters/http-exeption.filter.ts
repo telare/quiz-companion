@@ -6,11 +6,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+
 import { AppResponse } from '../types';
 
 interface NestErrorResponse {
-  message: string | string[];
   error: string;
+  message: string | string[];
   statusCode: number;
 }
 

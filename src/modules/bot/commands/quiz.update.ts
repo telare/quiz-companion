@@ -1,13 +1,14 @@
 import { UseGuards } from '@nestjs/common';
 import { Action, Command, Ctx, Hears, Update } from 'nestjs-telegraf';
-import { QuestionService } from '../../question/question.service';
 import { Markup, Scenes } from 'telegraf';
-import { FavoriteQuestionService } from '../../favorite-question/favorite-question.service';
-import { getErrorMessage, WIZARD_KEYS } from '../../../common/utils';
+
 import { BotContext } from '../../../bot.context';
 import { AuthGuard } from '../../../common/guards';
-@UseGuards(AuthGuard)
+import { getErrorMessage, WIZARD_KEYS } from '../../../common/utils';
+import { FavoriteQuestionService } from '../../favorite-question/favorite-question.service';
+import { QuestionService } from '../../question/question.service';
 @Update()
+@UseGuards(AuthGuard)
 export class QuizCommand {
   constructor(
     private readonly questionService: QuestionService,

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
   IsArray,
@@ -9,7 +10,6 @@ import {
   IsBoolean,
 } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
 import {
   Category,
   Difficulty,
@@ -34,7 +34,7 @@ export class CreateQuestionDTO {
     example: JS_TopicTitle.ASYNC_AWAIT,
   })
   @IsEnum({ ...JS_TopicTitle, ...ENGLISH_TopicTitle })
-  topicTitle: JS_TopicTitle | ENGLISH_TopicTitle;
+  topicTitle: ENGLISH_TopicTitle | JS_TopicTitle;
 
   @ApiProperty({
     enum: Difficulty,
@@ -62,10 +62,10 @@ export class CreateQuestionDTO {
   @IsString()
   sentenceExample?: string;
 
+  @ArrayMinSize(3)
+  @ArrayNotEmpty()
   @IsArray()
   @IsString({ each: true })
-  @ArrayNotEmpty()
-  @ArrayMinSize(3)
   options: string[];
 
   @IsNumber()
@@ -74,7 +74,7 @@ export class CreateQuestionDTO {
   @IsString()
   explanation: string;
 
-  @IsOptional()
   @IsBoolean()
+  @IsOptional()
   isPopular?: boolean;
 }

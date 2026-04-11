@@ -1,14 +1,14 @@
 import { HttpStatus } from '@nestjs/common';
 
 export interface AppResponse {
-  success: boolean;
   data: unknown;
   error?: {
+    details: null | string | string[];
+    message: string | string[];
+    method: string;
+    path: string;
     statusCode: HttpStatus;
     timestamp: string;
-    path: string;
-    method: string;
-    message: string | string[];
-    details: string | string[] | null;
   };
+  success: boolean;
 }

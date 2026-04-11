@@ -1,19 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import express from 'express';
+
+import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters';
+import { HttpExceptionFilter } from './common/filters/http-exeption.filter';
+import { MongoExceptionFilter } from './common/filters/mongo-exeption.filter';
 import {
   LoggingInterceptor,
   TransformInterceptor,
 } from './common/interceptors';
 import metadata from './metadata';
-import { MongoExceptionFilter } from './common/filters/mongo-exeption.filter';
-import { HttpExceptionFilter } from './common/filters/http-exeption.filter';
 
 let cachedApp: any;
 const isProd = process.env.NODE_ENV === 'production';

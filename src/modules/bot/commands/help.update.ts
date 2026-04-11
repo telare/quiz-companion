@@ -1,11 +1,12 @@
 import { Help, Ctx, Update, Hears } from 'nestjs-telegraf';
-import { AVAILABLE_COMMANDS } from '../../../common/utils';
 import { Context } from 'telegraf';
+
+import { AVAILABLE_COMMANDS } from '../../../common/utils';
 
 @Update()
 export class HelpCommand {
-  @Help()
   @Hears(/💡 Help me/)
+  @Help()
   async helpCommand(@Ctx() ctx: Context) {
     const message = [
       '<b>Available commands:</b>',

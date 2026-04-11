@@ -1,72 +1,72 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+export enum Category {
+  ENGLISH = 'english',
+  JS = 'javascript',
+}
+
 export enum Difficulty {
   JUNIOR = 'junior',
   MIDDLE = 'middle',
   SERNIOR = 'senior',
 }
 
-export enum JS_TopicTitle {
-  CLOSURES = 'Closures',
-  PROMISES = 'Promises',
-  EVENT_LOOP = 'Event loop',
-  HOISTING = 'Hoisting',
-  PROTOTYPES = 'Prototypes',
-  SCOPES = 'Scopes',
-  THIS_KEYWORD = 'This keyword',
-  ASYNC_AWAIT = 'Async/Await',
-  GENERATORS = 'Generators',
-  GARBAGE_COLLECTION = 'Garbage collection',
-  CLASSES = 'Classes',
-  CURRYING = 'Currying',
-  DESTRUCTURING = 'Destructuring',
-  MAP_AND_SET = 'Map and Set',
-  WEAK_MAP = 'WeakMap',
-  PROXY = 'Proxy',
-  REFLECT = 'Reflect',
-  MODULES = 'Modules',
-  STRICT_MODE = 'Strict mode',
-  TYPE_COERCION = 'Type coercion',
-  SYMBOLS = 'Symbols',
-  MEMORY_MANAGEMENT = 'Memory management',
-  WEB_APIS = 'Web APIs',
-  DOM_API = 'DOM API',
-  DESIGN_PATTERNS = 'Design patterns',
-  PERFORMANCE = 'Performance',
-  OTHER = 'Other',
-}
-
 export enum ENGLISH_TopicTitle {
-  TENSES = 'Tenses',
+  ADJECTIVES_AND_ADVERBS = 'Adjectives and Adverbs',
   ARTICLES = 'Articles',
-  PREPOSITIONS = 'Prepositions',
+  CLEFT_SENTENCES = 'Cleft Sentences',
+  COLLOCATIONS = 'Collocations',
+  COMPARATIVES_AND_SUPERLATIVES = 'Comparatives and Superlatives',
   CONDITIONALS = 'Conditionals',
+  CONJUNCTIONS = 'Conjunctions',
+  COUNTABLE_AND_UNCOUNTABLE_NOUNS = 'Countable and Uncountable Nouns',
+  DETERMINERS = 'Determiners',
+  DIRECT_AND_INDIRECT_SPEECH = 'Direct and Indirect Speech',
+  ELLIPSIS = 'Ellipsis',
+  EMPHASIS = 'Emphasis',
+  GERUNDS_AND_INFINITIVES = 'Gerunds and Infinitives',
+  INVERSION = 'Inversion',
   MODAL_VERBS = 'Modal Verbs',
   PASSIVE_VOICE = 'Passive Voice',
-  REPORTED_SPEECH = 'Reported Speech',
-  RELATIVE_CLAUSES = 'Relative Clauses',
-  CONJUNCTIONS = 'Conjunctions',
-  PUNCTUATION = 'Punctuation',
-  SUBJECT_VERB_AGREEMENT = 'Subject-Verb Agreement',
-  PRONOUNS = 'Pronouns',
-  ADJECTIVES_AND_ADVERBS = 'Adjectives and Adverbs',
-  COMPARATIVES_AND_SUPERLATIVES = 'Comparatives and Superlatives',
-  GERUNDS_AND_INFINITIVES = 'Gerunds and Infinitives',
   PHRASAL_VERBS = 'Phrasal Verbs',
-  COLLOCATIONS = 'Collocations',
-  WORD_ORDER = 'Word Order',
-  DETERMINERS = 'Determiners',
-  COUNTABLE_AND_UNCOUNTABLE_NOUNS = 'Countable and Uncountable Nouns',
-  DIRECT_AND_INDIRECT_SPEECH = 'Direct and Indirect Speech',
-  INVERSION = 'Inversion',
-  ELLIPSIS = 'Ellipsis',
-  CLEFT_SENTENCES = 'Cleft Sentences',
-  EMPHASIS = 'Emphasis',
+  PREPOSITIONS = 'Prepositions',
+  PRONOUNS = 'Pronouns',
+  PUNCTUATION = 'Punctuation',
+  RELATIVE_CLAUSES = 'Relative Clauses',
+  REPORTED_SPEECH = 'Reported Speech',
+  SUBJECT_VERB_AGREEMENT = 'Subject-Verb Agreement',
+  TENSES = 'Tenses',
   VOCABULARY_IN_CONTEXT = 'Vocabulary in Context',
+  WORD_ORDER = 'Word Order',
 }
 
-export enum Category {
-  JS = 'javascript',
-  ENGLISH = 'english',
+export enum JS_TopicTitle {
+  ASYNC_AWAIT = 'Async/Await',
+  CLASSES = 'Classes',
+  CLOSURES = 'Closures',
+  CURRYING = 'Currying',
+  DESIGN_PATTERNS = 'Design patterns',
+  DESTRUCTURING = 'Destructuring',
+  DOM_API = 'DOM API',
+  EVENT_LOOP = 'Event loop',
+  GARBAGE_COLLECTION = 'Garbage collection',
+  GENERATORS = 'Generators',
+  HOISTING = 'Hoisting',
+  MAP_AND_SET = 'Map and Set',
+  MEMORY_MANAGEMENT = 'Memory management',
+  MODULES = 'Modules',
+  OTHER = 'Other',
+  PERFORMANCE = 'Performance',
+  PROMISES = 'Promises',
+  PROTOTYPES = 'Prototypes',
+  PROXY = 'Proxy',
+  REFLECT = 'Reflect',
+  SCOPES = 'Scopes',
+  STRICT_MODE = 'Strict mode',
+  SYMBOLS = 'Symbols',
+  THIS_KEYWORD = 'This keyword',
+  TYPE_COERCION = 'Type coercion',
+  WEAK_MAP = 'WeakMap',
+  WEB_APIS = 'Web APIs',
 }
 @Schema()
 export class Question {
@@ -82,7 +82,7 @@ export class Question {
     ],
     default: JS_TopicTitle.OTHER,
   })
-  topicTitle: JS_TopicTitle | ENGLISH_TopicTitle;
+  topicTitle: ENGLISH_TopicTitle | JS_TopicTitle;
 
   @Prop({
     required: true,
@@ -117,6 +117,6 @@ export class Question {
   isPopular?: boolean;
 }
 
-export type QuestionDocument = Question & Document;
+export type QuestionDocument = Document & Question;
 
 export const QuestionSchema = SchemaFactory.createForClass(Question);

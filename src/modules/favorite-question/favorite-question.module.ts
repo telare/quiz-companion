@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { FavoriteQuestionService } from './favorite-question.service';
-import { FavoriteQuestionController } from './favorite-question.controller';
 import { MongooseModule } from '@nestjs/mongoose';
+
 import { Favorite, FavoriteSchema } from './entities/favorite-question.entity';
+import { FavoriteQuestionController } from './favorite-question.controller';
+import { FavoriteQuestionService } from './favorite-question.service';
 
 @Module({
   imports: [

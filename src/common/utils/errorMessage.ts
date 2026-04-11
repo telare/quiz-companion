@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
-const ERROR_MAP: Record<string | number, string> = {
+const ERROR_MAP: Record<number | string, string> = {
   [HttpStatus.UNAUTHORIZED]:
     '⚠️ You must have a Telegram username to participate in quizzes.',
   [HttpStatus.FORBIDDEN]:
@@ -24,10 +24,10 @@ const ERROR_MAP: Record<string | number, string> = {
  */
 export const getErrorMessage = (error: unknown): string => {
   const err = error as {
+    code?: number | string;
+    message?: string;
     status?: number;
     statusCode?: number;
-    code?: string | number;
-    message?: string;
   };
 
   const code = err.status || err.statusCode || err.code;

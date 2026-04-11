@@ -1,11 +1,12 @@
-import { Command, Ctx, Hears, Update } from 'nestjs-telegraf';
-import { UserService } from '../../users/user.service';
 import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from '../../../common/guards';
-import { BotContext } from '../../../bot.context';
+import { Command, Ctx, Hears, Update } from 'nestjs-telegraf';
 
-@UseGuards(AuthGuard)
+import { BotContext } from '../../../bot.context';
+import { AuthGuard } from '../../../common/guards';
+import { UserService } from '../../users/user.service';
+
 @Update()
+@UseGuards(AuthGuard)
 export class UserCommand {
   constructor(private readonly userService: UserService) {}
 

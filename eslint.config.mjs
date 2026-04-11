@@ -4,6 +4,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import { defineConfig } from 'eslint/config';
 import eslintNestJs from '@darraghor/eslint-plugin-nestjs-typed';
+import perfectionist from 'eslint-plugin-perfectionist';
 
 export default defineConfig([
   {
@@ -17,6 +18,7 @@ export default defineConfig([
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   ...eslintNestJs.configs.flatRecommended,
+  perfectionist.configs['recommended-natural'],
   {
     languageOptions: {
       globals: {
@@ -40,6 +42,11 @@ export default defineConfig([
       '@darraghor/nestjs-typed/api-method-should-specify-api-response': 'warn',
       // todo: this should be on, but it causes a lot of false positives in the current state of the codebase
       '@darraghor/nestjs-typed/injectable-should-be-provided': ['off'],
+      'perfectionist/sort-named-imports': 'off',
+      'perfectionist/sort-arrays': 'off',
+      'perfectionist/sort-objects': 'off',
+      'perfectionist/sort-classes': 'off',
+      'perfectionist/sort-type-unions': 'off',
     },
   },
   {

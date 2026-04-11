@@ -1,12 +1,12 @@
 import { Controller, Logger, Post, Req, Res } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf } from 'telegraf';
 import { Update } from 'telegraf/types';
-import { Request, Response } from 'express';
 
-@Controller('api')
 @ApiTags('Bot Webhook')
+@Controller('api')
 export class BotController {
   constructor(@InjectBot() private readonly bot: Telegraf) {}
   private readonly logger = new Logger(BotController.name);
