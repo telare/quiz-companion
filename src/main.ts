@@ -49,8 +49,16 @@ async function bootstrap() {
     await app.init();
   } else {
     const port = process.env.PORT || 3000;
+    const TELEGRAM_WEBHOOK_PATH =
+      process.env.TELEGRAM_WEBHOOK_PATH || "/webhook";
+
     await app.listen(port);
-    logger.log(`Server is running on http://localhost:${port}`);
+
+    logger.debug(`🟢 Server is running on http://localhost:${port}`);
+    logger.debug(`📜 Docs is running on http://localhost:${port}/api/docs`);
+    logger.debug(
+      `💬 Telegram WebHook is running on http://localhost:${port}${TELEGRAM_WEBHOOK_PATH}`,
+    );
   }
   return server;
 }
