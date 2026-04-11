@@ -1,14 +1,14 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
 export enum UserRank {
-  "Iron" = "Iron",
-  "Bronze" = "Bronze",
-  "Silver" = "Silver",
-  "Gold" = "Gold",
-  "Platinum" = "Platinum",
-  "Diamond" = "Diamond",
-  "Master" = "Master",
+  'Bronze' = 'Bronze',
+  'Diamond' = 'Diamond',
+  'Gold' = 'Gold',
+  'Iron' = 'Iron',
+  'Master' = 'Master',
+  'Platinum' = 'Platinum',
+  'Silver' = 'Silver',
 }
 
 @Schema({ timestamps: true })
@@ -25,8 +25,8 @@ export class User {
     enum: Object.keys(UserRank),
     default: UserRank.Iron,
   })
-  rank: UserRank;
+  rank?: UserRank;
 }
 
-export type UserDocument = User & Document;
+export type UserDocument = Document & User;
 export const UserSchema = SchemaFactory.createForClass(User);

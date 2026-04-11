@@ -1,108 +1,157 @@
-import "dotenv/config";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Category } from "../schemas";
+import 'dotenv/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-interface Question {
-  topicTitle: string;
-  difficulty: string;
-  questionText: string;
-  options: string[];
-  correctOptionIndex: number;
-  explanation: string;
-  sentenceExample?: string | null;
-  codeSnippet?: string | null;
-}
+import { Category } from '../modules/question/entities/question.entity';
 
 type DomainType = keyof typeof DOMAINS;
 
+interface Question {
+  codeSnippet?: null | string;
+  correctOptionIndex: number;
+  difficulty: string;
+  explanation: string;
+  options: string[];
+  questionText: string;
+  sentenceExample?: null | string;
+  topicTitle: string;
+}
+
+const AI_STUDIO_KEY = process.env.GOOGLE_AI_STUDIO_API_KEY;
+const QUIZ_API_ENDPOINT = process.env.QUIZ_API_ENDPOINT;
+if (!AI_STUDIO_KEY || !QUIZ_API_ENDPOINT)
+  throw new Error('Misssing env variables');
+
+const AI_MODEL = 'gemini-2.5-flash';
+const RESPONSE_TYPE = 'application/json';
+const QUESTION_EXPLANATION_FIELD_CHAR_LIMIT = 230;
+const QUESTIONS_PER_BATCH = 2;
+
+const DIFFICULTIES = ['junior', 'middle', 'senior'];
 const DOMAINS = {
   language: {
     topics: [
-      "Tenses",
-      "Articles",
-      "Prepositions",
-      "Conditionals",
-      "Modal Verbs",
-      "Passive Voice",
-      "Reported Speech",
-      "Relative Clauses",
-      "Conjunctions",
-      "Punctuation",
-      "Subject-Verb Agreement",
-      "Pronouns",
-      "Adjectives and Adverbs",
-      "Comparatives and Superlatives",
-      "Gerunds and Infinitives",
-      "Phrasal Verbs",
-      "Collocations",
-      "Word Order",
-      "Determiners",
-      "Countable and Uncountable Nouns",
-      "Direct and Indirect Speech",
-      "Inversion",
-      "Ellipsis",
-      "Cleft Sentences",
-      "Emphasis",
-      "Vocabulary in Context",
+      'Tenses',
+      'Articles',
+      'Prepositions',
+      'Conditionals',
+      'Modal Verbs',
+      'Passive Voice',
+      'Reported Speech',
+      'Relative Clauses',
+      'Conjunctions',
+      'Punctuation',
+      'Pronouns',
+      'Adjectives and Adverbs',
+      'Comparatives and Superlatives',
+      'Collocations',
+      'Word Order',
+      'Determiners',
+      'Countable and Uncountable Nouns',
+      'Cleft Sentences',
+      'Vocabulary in Context',
     ],
-    difficulties: ["junior", "middle", "senior"],
+    difficulties: DIFFICULTIES,
     difficultyGuide: `
-   - junior (A1-A2): basic rules, common patterns, everyday sentences.
-   - middle (B1-B2): exceptions, context-dependent rules, common mistakes.
-   - senior (C1-C2): nuanced usage, formal/academic register, rare edge cases, native-speaker subtleties.`,
+    - junior (A1-A2): basic rules, common patterns, everyday sentences.
+    - middle (B1-B2): exceptions, context-dependent rules, common mistakes.
+    - senior (C1-C2): nuanced usage, formal/academic register, rare edge cases, native-speaker subtleties.`,
     optionsRule: `The "options" field must be an array of exactly 4 strings. For fill-in-the-blank: word/phrase choices. For error-correction: corrected sentence versions.`,
-    role: "Senior English Language Expert and Linguist",
+    role: 'Senior English Language Expert and Linguist',
   },
 
   programming: {
     topics: [
-      "Closures",
-      "Promises",
-      "Event Loop",
-      "Hoisting",
-      "Prototypes",
-      "Scopes",
-      "This Keyword",
-      "Async/Await",
-      "Generators",
-      "Garbage Collection",
-      "Classes",
-      "Currying",
-      "Destructuring",
-      "Map and Set",
-      "WeakMap",
-      "Proxy",
-      "Reflect",
-      "Modules",
-      "Strict Mode",
-      "Type Coercion",
-      "Symbols",
-      "Memory Management",
-      "Web APIs",
-      "DOM API",
-      "Design Patterns",
-      "Performance",
+      'Closures',
+      'Promises',
+      'Event Loop',
+      'Hoisting',
+      'Prototypes',
+      'Scopes',
+      'This Keyword',
+      'Async/Await',
+      'Generators',
+      'Garbage Collection',
+      'Classes',
+      'Destructuring',
+      'Map and Set',
+      'WeakMap',
+      'Proxy',
+      'Reflect',
+      'Modules',
+      'Strict Mode',
+      'Type Coercion',
+      'Symbols',
+      'Memory Management',
+      'Web APIs',
+      'DOM API',
+      'Design Patterns',
+      'Performance',
     ],
-    difficulties: ["junior", "middle", "senior"],
+    difficulties: DIFFICULTIES,
     difficultyGuide: `
-   - junior: syntax basics, common built-ins, simple patterns.
-   - middle: edge cases, async behavior, tricky coercion, common bugs.
-   - senior: engine internals, performance tradeoffs, spec-level subtleties.`,
+    - junior: syntax basics, common built-ins, simple patterns.
+    - middle: edge cases, async behavior, tricky coercion, common bugs.
+    - senior: engine internals, performance tradeoffs, spec-level subtleties.`,
     optionsRule: `The "options" field must be an array of exactly 4 strings. For predict_output: the exact console output. For code_completion: the missing code fragment.`,
-    role: "Senior Software Engineer and Technical Interviewer",
+    role: 'Senior Software Engineer and Technical Interviewer',
   },
 };
-const DIFFICULTIES = ["junior", "middle", "senior"];
-const AI_STUDIO = process.env.AI_STUDIO;
-const QUIZ_API_ENDPOINT = process.env.QUIZ_API_ENDPOINT;
-if (!AI_STUDIO || !QUIZ_API_ENDPOINT) throw new Error("Misssing env variables");
 
-const genAI = new GoogleGenerativeAI(AI_STUDIO);
-const AI_MODEL = "gemini-2.5-flash";
-const RESPONSE_TYPE = "application/json";
-const QUESTIONS_PER_BATCH = 10;
+const genAI = new GoogleGenerativeAI(AI_STUDIO_KEY);
 
-function getPromptTemplate(
+async function generateQuestion(
+  domain: DomainType,
+  category: Category,
+  topic: string,
+  difficulty: string,
+) {
+  try {
+    const prompt = getPrompt(domain, category, topic, difficulty);
+
+    const model = genAI.getGenerativeModel({
+      model: AI_MODEL,
+      generationConfig: { responseMimeType: RESPONSE_TYPE },
+    });
+
+    const result = await model.generateContent(prompt);
+
+    const response = result.response;
+    const responseText = response.text();
+
+    if (!responseText) {
+      throw new Error('Empty response from Gemini');
+    }
+
+    const generatedQuestions = JSON.parse(responseText) as Question[];
+
+    return {
+      questions: generatedQuestions,
+      domain,
+    };
+  } catch (error: unknown) {
+    console.error(`Failed to generate question: ${(error as Error).message}`);
+    throw error;
+  }
+}
+
+function getCombos(category: Category, domain: DomainType) {
+  const combos: {
+    category: Category;
+    difficulty: string;
+    domain: DomainType;
+    topic: string;
+  }[] = [];
+  const topics = DOMAINS[domain].topics;
+  for (let i = 0; i < 3; i++) {
+    const topic = topics[Math.floor(Math.random() * topics.length)];
+    const difficulty =
+      DIFFICULTIES[Math.floor(Math.random() * DIFFICULTIES.length)];
+    combos.push({ category, topic, difficulty, domain });
+  }
+  return combos;
+}
+
+function getPrompt(
   domain: DomainType,
   category: Category,
   topic: string,
@@ -117,7 +166,7 @@ function getPromptTemplate(
     category === Category.JS
       ? `RULE: You may use "codeSnippet" (if needed). You are FORBIDDEN from using "sentenceExample".`
       : `RULE: You may use "sentenceExample" (if needed). You are FORBIDDEN from using "codeSnippet".`;
-  const topicList = cfg.topics.join(", ");
+  const topicList = cfg.topics.join(', ');
 
   return `
 Act as a ${cfg.role} specializing in ${category}.
@@ -137,10 +186,13 @@ ${exclusivityRule}
 5. The "sentenceExample" field must be a single string with a natural example sentence. If purely theoretical, omit the field
 6. ${cfg.optionsRule}
 7. The "correctOptionIndex" must be an integer (0–3).
-8. The "explanation" field MUST be strictly under 200 characters.
-9. Use only double quotes "" for all JSON keys and string values.
+8. The "explanation" field MUST be strictly under ${QUESTION_EXPLANATION_FIELD_CHAR_LIMIT} characters.
+9. Use ONLY double quotes ("") for all JSON keys and string values. Single quotes ('') are strictly forbidden for JSON structure.
+10. INTERNAL QUOTES: If a string value (like questionText or explanation) contains a quote, you MUST escape it with a backslash to prevent breaking the JSON format.
+11. Ensure no trailing commas after the last property in an object or the last object in the array.
+12. CRITICAL: The 'topicTitle' must match the character casing (uppercase/lowercase) of the restricted list EXACTLY. For example, use 'Event loop' instead of 'Event Loop'.
 
-Each object in the array must follow this structure:
+Each object must follow this structure:
 {
   "topicTitle": "Chosen from the restricted list",
   "difficulty": "${difficulty}",
@@ -148,117 +200,14 @@ Each object in the array must follow this structure:
   "questionText": "Question string. For fill-in-the-blank or code_completion, use _____ as the blank.",
   "options": ["A", "B", "C", "D"],
   "correctOptionIndex": 0,
-  "explanation": "Brief rule or gotcha explanation < 200 chars"
+  "explanation": ""
 }
 `.trim();
 }
 
-async function generateQuestion(
-  domain: DomainType,
-  category: Category,
-  topic: string,
-  difficulty: string,
-) {
-  try {
-    const prompt = getPromptTemplate(domain, category, topic, difficulty);
-
-    const model = genAI.getGenerativeModel({
-      model: AI_MODEL,
-      generationConfig: { responseMimeType: RESPONSE_TYPE },
-    });
-
-    const result = await model.generateContent(prompt);
-
-    const response = result.response;
-    const responseText = response.text();
-
-    if (!responseText) {
-      throw new Error("Empty response from Gemini");
-    }
-
-    const generatedQuestions = JSON.parse(responseText) as Question[];
-
-    return {
-      questions: generatedQuestions,
-      domain,
-    };
-  } catch (error: unknown) {
-    console.error(`Failed to generate question: ${(error as Error).message}`);
-    throw error;
-  }
-}
-
-async function postToEndpoint(question: Question): Promise<Question> {
-  const res = await fetch(QUIZ_API_ENDPOINT || "", {
-    method: "POST",
-    body: JSON.stringify(question),
-  });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  const posted = (await res.json()) as Question;
-  return posted;
-}
-
-function validateQuestion(q: Question, domain: DomainType) {
-  const cfg = DOMAINS[domain];
-  if (!cfg) throw new Error(`Unknown domain: "${domain}"`);
-
-  const required = [
-    "topicTitle",
-    "difficulty",
-    "category",
-    "questionText",
-    "options",
-    "correctOptionIndex",
-    "explanation",
-  ];
-
-  for (const key of required) {
-    if (!(key in q)) throw new Error(`Missing field: ${key}`);
-  }
-
-  if (!cfg.topics.includes(q.topicTitle))
-    throw new Error(`Invalid topicTitle: "${q.topicTitle}"`);
-
-  if (!cfg.difficulties.includes(q.difficulty))
-    throw new Error(`Invalid difficulty: "${q.difficulty}"`);
-
-  if (!Array.isArray(q.options) || q.options.length !== 4)
-    throw new Error("options must be an array of exactly 4 strings");
-
-  if (!q.options.every((o) => typeof o === "string"))
-    throw new Error("All options must be strings");
-
-  if (
-    !Number.isInteger(q.correctOptionIndex) ||
-    q.correctOptionIndex < 0 ||
-    q.correctOptionIndex > 3
-  )
-    throw new Error(`Invalid correctOptionIndex: ${q.correctOptionIndex}`);
-
-  if (typeof q.explanation !== "string" || q.explanation.length >= 200)
-    throw new Error("explanation must be a string under 200 chars");
-}
-
-function getCombos(category: Category, domain: DomainType) {
-  const combos: {
-    category: Category;
-    topic: string;
-    difficulty: string;
-    domain: DomainType;
-  }[] = [];
-  const topics = DOMAINS[domain].topics;
-  for (let i = 0; i < 3; i++) {
-    const topic = topics[Math.floor(Math.random() * topics.length)];
-    const difficulty =
-      DIFFICULTIES[Math.floor(Math.random() * DIFFICULTIES.length)];
-    combos.push({ category, topic, difficulty, domain });
-  }
-  return combos;
-}
-
 async function main() {
-  const englishCombos = getCombos(Category.ENGLISH, "language");
-  const jsCombos = getCombos(Category.JS, "programming");
+  const englishCombos = getCombos(Category.ENGLISH, 'language');
+  const jsCombos = getCombos(Category.JS, 'programming');
 
   console.log(
     `🚀 Starting generation for English: ${englishCombos.length} and JS: ${jsCombos.length} batches...`,
@@ -272,11 +221,11 @@ async function main() {
   );
   console.log(aiResults);
   const allQuestions = aiResults
-    .filter((r) => r.status === "fulfilled")
+    .filter((r) => r.status === 'fulfilled')
     .flatMap((r) => r.value);
   console.log(allQuestions);
   console.log(
-    `✅ Generated ${allQuestions.length * QUESTIONS_PER_BATCH} total questions. Validating...`,
+    `✅ Generated ${allQuestions.length * Number(QUESTIONS_PER_BATCH)} total questions. Validating...`,
   );
 
   const validQuestions: Question[] = [];
@@ -291,23 +240,84 @@ async function main() {
       if (err instanceof Error) {
         console.warn(`❌ Skipping invalid question: ${err.message}`);
       }
-      console.log("Unhanled js!", err);
+      console.log('Unhanled js!', err);
     }
   }
 
-  console.log(`📤 Posting ${validQuestions.length} valid questions to DB...`);
-  console.log(validQuestions);
-  const postResults = await Promise.allSettled(
-    validQuestions.map((v) => postToEndpoint(v)),
+  console.log(
+    `📤 Posting ${validQuestions.length} valid questions to ${QUIZ_API_ENDPOINT}...`,
   );
+  const questionPostArr: Promise<Question>[] = validQuestions.map((v) =>
+    postToEndpoint(v),
+  );
+  const postResults = await Promise.allSettled(questionPostArr);
 
-  const successful = postResults.filter((r) => r.status === "fulfilled").length;
-  console.log(postResults.filter((r) => r.status === "rejected"));
-  const failed = postResults.filter((r) => r.status === "rejected").length;
+  const successful = postResults.filter((r) => r.status === 'fulfilled').length;
+  console.log(postResults.filter((r) => r.status === 'rejected'));
+  const failed = postResults.filter((r) => r.status === 'rejected').length;
 
   console.log(`--- Finished ---`);
   console.log(`Successfully Posted: ${successful}`);
   console.log(`Failed to Post: ${failed}`);
+}
+
+async function postToEndpoint(question: Question): Promise<Question> {
+  const body = JSON.stringify(question);
+  console.log('[POST ENDPOINT FNC] request body:', body);
+
+  const res = await fetch(QUIZ_API_ENDPOINT || '', {
+    method: 'POST',
+    body: JSON.stringify(question),
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const posted = (await res.json()) as Question;
+  return posted;
+}
+
+function validateQuestion(q: Question, domain: DomainType) {
+  const cfg = DOMAINS[domain];
+  if (!cfg) throw new Error(`Unknown domain: "${domain}"`);
+
+  const required = [
+    'questionText',
+    'topicTitle',
+    'difficulty',
+    'category',
+    'options',
+    'correctOptionIndex',
+    'explanation',
+  ];
+
+  for (const key of required) {
+    if (!(key in q)) throw new Error(`Missing field: ${key}`);
+  }
+
+  if (!cfg.topics.includes(q.topicTitle))
+    throw new Error(`Invalid topicTitle: "${q.topicTitle}"`);
+
+  if (!cfg.difficulties.includes(q.difficulty))
+    throw new Error(`Invalid difficulty: "${q.difficulty}"`);
+
+  if (!Array.isArray(q.options) || q.options.length !== 4)
+    throw new Error('options must be an array of exactly 4 strings');
+
+  if (!q.options.every((o) => typeof o === 'string'))
+    throw new Error('All options must be strings');
+
+  if (
+    !Number.isInteger(q.correctOptionIndex) ||
+    q.correctOptionIndex < 0 ||
+    q.correctOptionIndex > 3
+  )
+    throw new Error(`Invalid correctOptionIndex: ${q.correctOptionIndex}`);
+
+  if (
+    typeof q.explanation !== 'string' ||
+    q.explanation.length >= QUESTION_EXPLANATION_FIELD_CHAR_LIMIT
+  )
+    throw new Error(
+      `explanation must be a string under ${QUESTION_EXPLANATION_FIELD_CHAR_LIMIT} chars`,
+    );
 }
 
 main()

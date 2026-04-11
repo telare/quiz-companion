@@ -1,8 +1,9 @@
-import { Injectable } from "@nestjs/common";
-import { CreateFavoriteQuestionDto } from "./dto/create-favorite-question.dto";
-import { InjectModel } from "@nestjs/mongoose";
-import { DeleteResult, HydratedDocument, Model } from "mongoose";
-import { Favorite } from "../../schemas";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { DeleteResult, HydratedDocument, Model } from 'mongoose';
+
+import { CreateFavoriteQuestionDto } from './dto/create-favorite-question.dto';
+import { Favorite } from './entities/favorite-question.entity';
 
 @Injectable()
 export class FavoriteQuestionService {
@@ -30,8 +31,8 @@ export class FavoriteQuestionService {
     userId,
     questionId,
   }: {
-    userId: string;
     questionId: string;
+    userId: string;
   }): Promise<HydratedDocument<Favorite> | null> {
     const fav = await this.favoriteModel.findOne().where({
       userId,
@@ -45,8 +46,8 @@ export class FavoriteQuestionService {
     userId,
     questionId,
   }: {
-    userId: string;
     questionId: string;
+    userId: string;
   }): Promise<DeleteResult> {
     return this.favoriteModel.deleteOne().where({
       userId,

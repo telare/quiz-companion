@@ -1,10 +1,16 @@
-import { ConflictException, Injectable, Logger } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { DeleteResult, HydratedDocument, Model, MongooseError } from "mongoose";
-import { UpdateQuestionDto } from "./dto/update-question.dto";
-import { FavoriteQuestionService } from "../favorite-question/favorite-question.service";
-import { Category, Question } from "../../schemas";
-import { BotService } from "../bot/bot.service";
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { HydratedDocument, Model, MongooseError } from 'mongoose';
+
+import { BotService } from '../bot/bot.service';
+import { FavoriteQuestionService } from '../favorite-question/favorite-question.service';
+import { UpdateQuestionDto } from './dto/update-question.dto';
+import { Category, Question } from './entities/question.entity';
 
 @Injectable()
 export class QuestionService {
@@ -22,7 +28,7 @@ export class QuestionService {
     } catch (error: unknown) {
       if (error instanceof MongooseError) {
         throw new ConflictException(
-          "A question with this content already exists",
+          'A question with this content already exists',
         );
       }
       throw error;
@@ -41,12 +47,12 @@ export class QuestionService {
   }
 
   async findUniqueTopics(): Promise<string[]> {
-    return this.questionModel.distinct("topicTitle").exec();
+    return this.questionModel.distinct('topicTitle').exec();
   }
 
   async findOneCustomized(
-    topicTitle: Question["topicTitle"],
-    difficulty: Question["difficulty"],
+    topicTitle: Question['topicTitle'],
+    difficulty: Question['difficulty'],
   ): Promise<HydratedDocument<Question> | null> {
     const q = await this.questionModel
       .findOne({
@@ -59,9 +65,9 @@ export class QuestionService {
   }
 
   async findManyCustomized(
-    topicTitle: Question["topicTitle"],
-    category: Question["category"],
-    difficulty: Question["difficulty"],
+    topicTitle: Question['topicTitle'],
+    category: Question['category'],
+    difficulty: Question['difficulty'],
     limit: number,
   ): Promise<HydratedDocument<Question>[]> {
     return this.questionModel.aggregate([
@@ -93,11 +99,11 @@ export class QuestionService {
   }
 
   async findById(id: string): Promise<HydratedDocument<Question> | null> {
-    const q = await this.questionModel.findById(id).exec();
-    if (!q) {
-      return null;
+    const question = await this.questionModel.findById(id).exec();
+    if (!question) {
+      throw new NotFoundException(`Question with id ${id} not found`);
     }
-    return q;
+    return question;
   }
 
   async findByText(text: string): Promise<HydratedDocument<Question> | null> {
@@ -119,24 +125,32 @@ export class QuestionService {
         new: true,
       },
     );
-    if (!updated) return null;
+    if (!updated) {
+      throw new NotFoundException(`Question with ID ${id} not found`);
+    }
     return updated;
   }
 
-  removeOne({ questionId }: { questionId: string }): Promise<DeleteResult> {
-    return this.questionModel.deleteOne().where({
-      questionId,
-    });
+  async removeOne(
+    questionId: string,
+  ): Promise<HydratedDocument<Question> | null> {
+    const deleted = await this.questionModel
+      .findByIdAndDelete(questionId)
+      .exec();
+    if (!deleted) {
+      throw new NotFoundException(`Question with ID ${questionId} not deleted`);
+    }
+    return deleted;
   }
 
   async checkQuestion(
     questionId: string,
     userOptionIndex: number,
-  ): Promise<{
-    isCorrect: boolean;
+  ): Promise<null | {
     correctAnswer: string;
     explanation: string;
-  } | null> {
+    isCorrect: boolean;
+  }> {
     const qinDb = await this.questionModel.findOne({ _id: questionId }).exec();
     if (!qinDb) {
       this.logger.warn(
@@ -166,13 +180,13 @@ export class QuestionService {
   }
 
   async countQuestionsByTopic(
-    category: Question["category"],
+    category: Question['category'],
   ): Promise<{ _id: string; totalByTopic: number }[]> {
     return this.questionModel.aggregate([
       { $match: { category } },
       {
         $group: {
-          _id: "$topicTitle",
+          _id: '$topicTitle',
           totalByTopic: {
             $sum: 1,
           },
@@ -185,29 +199,45 @@ export class QuestionService {
     return this.questionModel.aggregate([
       {
         $group: {
-          _id: "$category",
+          _id: '$category',
         },
       },
-      { $project: { category: "$_id", _id: 1 } },
+      { $project: { category: '$_id', _id: 1 } },
     ]);
   }
 
-  async buildQuestion(
-    userId: string,
-    questionData: HydratedDocument<Question>,
-  ) {
+  async findManyPopularQuestionsByCategory(
+    category: Question['category'],
+    difficulty: Question['difficulty'],
+    limit: number,
+  ): Promise<HydratedDocument<Question>[]> {
+    return this.questionModel.aggregate([
+      {
+        $match: { category, isPopular: true, difficulty },
+      },
+      { $limit: limit },
+    ]);
+  }
+
+  async buildQuestion({
+    userId,
+    questionData,
+  }: {
+    questionData: HydratedDocument<Question>;
+    userId: string;
+  }) {
     const questionId = questionData._id.toString();
     const header = `<b>Topic:</b> ${questionData.topicTitle}\n<b>Difficulty:</b> ${questionData.difficulty}\n\n`;
     const body = `${questionData.questionText}\n`;
 
     const code = questionData.codeSnippet
       ? `\n<pre><code class="language-javascript">${questionData.codeSnippet}</code></pre>\n`
-      : "";
+      : '';
 
-    const optionLabels = ["A", "B", "C", "D"];
+    const optionLabels = ['A', 'B', 'C', 'D'];
     const optionsText = questionData.options
       .map((opt, i) => `<b>${optionLabels[i]})</b> ${opt}`)
-      .join("\n");
+      .join('\n');
 
     const fullMessage = `${header}${body}${code}\n${optionsText}`;
     const callbackData = `quiz:${questionId}:`;
@@ -221,11 +251,11 @@ export class QuestionService {
       questionId,
     });
     const saveQuestionButton = {
-      buttonText: "⭐ Save question",
+      buttonText: '⭐ Save question',
       callbackData: `save:${questionId}`,
     };
     const unSaveButton = {
-      buttonText: "🗑 Remove from saved",
+      buttonText: '🗑 Remove from saved',
       callbackData: `unsave:${questionId}`,
     };
     const keyboard = this.botService.createInlineKeyboard([

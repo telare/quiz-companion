@@ -1,71 +1,130 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
-  NotFoundException,
   Param,
   ParseArrayPipe,
   Patch,
   Post,
-} from "@nestjs/common";
-import { QuestionService } from "./question.service";
-import { CreateQuestionDTO } from "./dto/create-question.dto";
-import { UpdateQuestionDto } from "./dto/update-question.dto";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Question } from "../../schemas";
-import { Throttle } from "@nestjs/throttler";
-@ApiTags("questions")
-@Controller("questions")
+  Query,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+
+import { CreateQuestionDTO } from './dto/create-question.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
+import { Question } from './entities/question.entity';
+import { QuestionService } from './question.service';
+
+@ApiTags('Questions')
+@Controller('questions')
 export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
 
-  @ApiOperation({ summary: "Post a question" })
-  @ApiResponse({ status: 200 })
+  @ApiOperation({ summary: 'Get a question' })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: '',
+    },
+  })
+  @Get(':id')
+  async getOne(@Param('id') id: string) {
+    return await this.questionService.findById(id);
+  }
+
+  @ApiOperation({ summary: 'Get popular questions' })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: '',
+    },
+  })
+  @Get('/:category/:difficulty')
+  async getAllPopularByCategory(
+    @Param('category') category: Question['category'],
+    @Param('difficulty') difficulty: Question['difficulty'],
+    @Query('limit') limit: number,
+  ) {
+    return await this.questionService.findManyPopularQuestionsByCategory(
+      category,
+      difficulty,
+      limit,
+    );
+  }
+
+  @ApiOperation({ summary: 'Get all questions' })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: '',
+    },
+  })
+  @Get()
+  async getAll() {
+    return await this.questionService.findAll();
+  }
+
+  @ApiOperation({ summary: 'Post a question' })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: '',
+    },
+  })
   @Post()
   async createOne(@Body() question: CreateQuestionDTO) {
     return await this.questionService.createOne(question);
   }
 
-  @ApiOperation({ summary: "Get all questions" })
-  @ApiResponse({ status: 200 })
-  @Get()
-  async getAll(): Promise<Question[]> {
-    return await this.questionService.findAll();
-  }
-
-  @ApiOperation({ summary: "Get a question" })
-  @ApiResponse({ status: 200 })
-  @Get(":id")
-  async getOne(@Param("id") id: string): Promise<Question> {
-    const question = await this.questionService.findById(id);
-    if (!question) {
-      throw new NotFoundException(`Question with id ${id} not found`);
-    }
-    return question;
-  }
-
+  @ApiOperation({ summary: 'Post many questions' })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: '',
+    },
+  })
+  @Post('bulk')
   @Throttle({ default: { limit: 60, ttl: 60000 } })
-  @ApiOperation({ summary: "Post many questions" })
-  @ApiResponse({ status: 200 })
-  @Post("bulk")
   async createMany(
     @Body(new ParseArrayPipe({ items: CreateQuestionDTO }))
     questions: CreateQuestionDTO[],
-  ): Promise<Question[]> {
+  ) {
     return await this.questionService.createMany(questions);
   }
 
-  @ApiOperation({ summary: "Update a question" })
-  @ApiResponse({ status: 200 })
-  @Patch(":id")
+  @ApiOperation({ summary: 'Update a question' })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: '',
+    },
+  })
+  @Patch(':id')
   async updateOne(
-    @Param("id") id: string,
+    @Param('id') id: string,
     @Body() updateQuestionDto: UpdateQuestionDto,
   ) {
-    const updated = await this.questionService.updateOne(id, updateQuestionDto);
-    if (!updated) {
-      throw new NotFoundException(`Question with ID ${id} not found`);
-    }
-    return updated;
+    return await this.questionService.updateOne(id, updateQuestionDto);
+  }
+
+  @ApiOperation({ summary: 'Delete a question' })
+  @ApiResponse({
+    status: 200,
+    example: {
+      success: true,
+      data: '',
+    },
+  })
+  @Delete(':id')
+  async deleteOne(@Param('id') id: string) {
+    return await this.questionService.removeOne(id);
   }
 }
