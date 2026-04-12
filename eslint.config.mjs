@@ -47,6 +47,7 @@ export default defineConfig([
       'perfectionist/sort-objects': 'off',
       'perfectionist/sort-classes': 'off',
       'perfectionist/sort-type-unions': 'off',
+      'perfectionist/sort-modules': 'off',
     },
   },
   {

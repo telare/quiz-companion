@@ -121,20 +121,10 @@ export class QuizWizard {
     await this.botService.replyWithQuizKeyboard(ctx);
     try {
       const state = ctx.wizard.state as MyWizardState;
-      const userName = ctx.from?.username;
-      if (!userName) {
-        await ctx.reply(
-          'No username provided. Please set a username in Telegram settings to use the quiz.',
-        );
-        return;
-      }
-      const userInDb = await this.userService.findByName(userName);
-      if (!userInDb) {
-        await ctx.reply('Please sign in.');
-        return;
-      }
+      const userInDb = ctx.dbUser;
+
       state.userId = userInDb._id.toString();
-      state.userName = userName;
+      state.userName = userInDb.username;
       state.runStatistic = {
         correct: 0,
         incorrect: 0,

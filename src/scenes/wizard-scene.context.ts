@@ -1,5 +1,7 @@
 import { Scenes } from 'telegraf';
 
+import { BotContext } from '../bot.context';
 import { MyWizardState } from './wizard-state.interface';
 
-export type WizardSceenContext = Scenes.WizardContext<MyWizardState>;
+export type WizardSceenContext = BotContext &
+  Scenes.WizardContext<MyWizardState>;

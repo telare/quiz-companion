@@ -7,6 +7,9 @@ import {
   Category,
 } from '../modules/question/entities/question.entity';
 import { UserRank } from '../modules/users/entities/user.entity';
+
+export type TopicTitle = ENGLISH_TopicTitle | JS_TopicTitle;
+
 export interface MyWizardState extends Scenes.WizardSessionData {
   category?: Category;
   currentIndex?: number;
@@ -24,4 +27,3 @@ export interface MyWizardState extends Scenes.WizardSessionData {
   userId?: string;
   userName?: string;
 }
-export type TopicTitle = ENGLISH_TopicTitle | JS_TopicTitle;

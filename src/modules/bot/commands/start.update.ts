@@ -12,6 +12,7 @@ export class StartCommand {
     private readonly userService: UserService,
     private readonly botService: BotService,
   ) {}
+
   @Start()
   async startCommand(@Ctx() ctx: BotContext) {
     const userInfo = ctx.from;
@@ -19,7 +20,7 @@ export class StartCommand {
 
     if (!username) {
       return await ctx.reply(
-        'Hi user! What do you want to do? /help to get more info',
+        '⚠️ Sorry, we need a username to get registered. Please set a username in your Telegram settings and try again.',
       );
     }
 

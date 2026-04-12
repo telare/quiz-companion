@@ -267,7 +267,8 @@ async function postToEndpoint(question: Question): Promise<Question> {
 
   const res = await fetch(QUIZ_API_ENDPOINT || '', {
     method: 'POST',
-    body: JSON.stringify(question),
+    headers: { 'Content-Type': 'application/json' },
+    body,
   });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   const posted = (await res.json()) as Question;
