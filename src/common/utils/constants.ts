@@ -23,6 +23,7 @@ export const AVAILABLE_COMMANDS = {
   my: '/my',
   ranking: '/ranking',
   help: '/help',
+  popular: '/popular_quiz',
 } as const;
 
 export const DEFAULT_REPLY_KEYBOARD_MSG =

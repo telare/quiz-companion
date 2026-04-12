@@ -1,11 +1,14 @@
 import { Help, Ctx, Update, Hears } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
 
-import { AVAILABLE_COMMANDS } from '../../../common/utils';
+import {
+  AVAILABLE_COMMANDS,
+  REPLY_KEYBOARD_BUTTONS_TEXT,
+} from '../../../common/utils';
 
 @Update()
 export class HelpCommand {
-  @Hears(/💡 Help me/)
+  @Hears(REPLY_KEYBOARD_BUTTONS_TEXT.HelpMe)
   @Help()
   async helpCommand(@Ctx() ctx: Context) {
     const message = [
@@ -17,6 +20,7 @@ export class HelpCommand {
       AVAILABLE_COMMANDS.my + ' - View your profile information',
       AVAILABLE_COMMANDS.ranking + ' - View the global leaderboard',
       AVAILABLE_COMMANDS.help + ' - Show this help message',
+      AVAILABLE_COMMANDS.popular + ' - Show popular quizzes',
       '',
       '<i>Tip: You can save questions during a quiz to review them later!</i>',
     ].join('\n');

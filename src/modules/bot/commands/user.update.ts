@@ -3,6 +3,7 @@ import { Command, Ctx, Hears, Update } from 'nestjs-telegraf';
 
 import { BotContext } from '../../../bot.context';
 import { AuthGuard } from '../../../common/guards';
+import { REPLY_KEYBOARD_BUTTONS_TEXT } from '../../../common/utils';
 import { UserService } from '../../users/user.service';
 
 @Update()
@@ -11,7 +12,7 @@ export class UserCommand {
   constructor(private readonly userService: UserService) {}
 
   @Command('my')
-  @Hears(/📊 My Profile/)
+  @Hears(REPLY_KEYBOARD_BUTTONS_TEXT.MyProfile)
   async getMyInfoCommand(@Ctx() ctx: BotContext) {
     const user = ctx.dbUser;
     if (!user) {
@@ -32,7 +33,7 @@ export class UserCommand {
   }
 
   @Command('ranking')
-  @Hears(/🏆 Ranking/)
+  @Hears(REPLY_KEYBOARD_BUTTONS_TEXT.Ranking)
   async getAppRanking(@Ctx() ctx: BotContext) {
     const users = await this.userService.findAll();
     if (!users || users.length === 0) {

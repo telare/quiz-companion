@@ -15,6 +15,7 @@ import { AuthGuard } from '../../common/guards';
 import {
   DIFFICULTY_MULTIPLIERS,
   getErrorMessage,
+  REPLY_KEYBOARD_BUTTONS_TEXT,
   WIZARD_KEYS,
 } from '../../common/utils';
 import { BotService } from '../../modules/bot/bot.service';
@@ -164,7 +165,7 @@ export class QuizWizard {
     }
   }
 
-  @Hears('🚫 Cancel Quiz')
+  @Hears(REPLY_KEYBOARD_BUTTONS_TEXT.CancelQuiz)
   async onQuizCancel(@Ctx() ctx: WizardSceenContext) {
     ctx.wizard.selectStep(7);
     return await this.onResults(ctx);

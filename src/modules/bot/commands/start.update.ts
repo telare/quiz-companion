@@ -39,6 +39,7 @@ export class StartCommand {
         `🚀 To begin a quiz, use the ${AVAILABLE_COMMANDS.quiz} command.`,
         `📊 To see your profile, use ${AVAILABLE_COMMANDS.my}.`,
         `💡 For a list of all commands, use ${AVAILABLE_COMMANDS.help}.`,
+        `🔥 To see popular quizzes, use ${AVAILABLE_COMMANDS.popular}.`,
         'You can also use buttons at the bottom!',
         "Let's start learning!",
       ].join('\n'),

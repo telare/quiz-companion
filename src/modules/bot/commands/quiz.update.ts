@@ -4,7 +4,11 @@ import { Markup, Scenes } from 'telegraf';
 
 import { BotContext } from '../../../bot.context';
 import { AuthGuard } from '../../../common/guards';
-import { getErrorMessage, WIZARD_KEYS } from '../../../common/utils';
+import {
+  getErrorMessage,
+  REPLY_KEYBOARD_BUTTONS_TEXT,
+  WIZARD_KEYS,
+} from '../../../common/utils';
 import { FavoriteQuestionService } from '../../favorite-question/favorite-question.service';
 import { QuestionService } from '../../question/question.service';
 @Update()
@@ -16,7 +20,7 @@ export class QuizCommand {
   ) {}
 
   @Command('quiz')
-  @Hears(/🚀 Start Quiz/)
+  @Hears(REPLY_KEYBOARD_BUTTONS_TEXT.StartQuiz)
   async handleStartQuiz(@Ctx() ctx: Scenes.SceneContext) {
     await ctx.scene.enter(WIZARD_KEYS.quiz);
   }
@@ -27,7 +31,7 @@ export class QuizCommand {
   }
 
   @Command('saved')
-  @Hears(/📌 Show saved/)
+  @Hears(REPLY_KEYBOARD_BUTTONS_TEXT.ShowSaved)
   async handleSavedQuestions(@Ctx() ctx: BotContext) {
     try {
       const user = ctx.dbUser;
